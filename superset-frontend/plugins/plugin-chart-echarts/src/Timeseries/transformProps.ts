@@ -106,6 +106,7 @@ import {
   getXAxisFormatter,
   getYAxisFormatter,
 } from '../utils/formatters';
+import { getDeltaTableTooltipFormatter } from '../pinterest-utils/tooltip';
 
 export default function transformProps(
   chartProps: EchartsTimeseriesChartProps,
@@ -192,6 +193,7 @@ export default function transformProps(
     yAxisTitleMargin,
     yAxisTitlePosition,
     zoomable,
+    pinterestDeltaTable,
   }: EchartsTimeseriesFormData = { ...DEFAULT_FORM_DATA, ...formData };
   const refs: Refs = {};
   const groupBy = ensureIsArray(groupby);
@@ -543,25 +545,32 @@ export default function transformProps(
       ...getDefaultTooltip(refs),
       show: !inContextMenu,
       trigger: richTooltip ? 'axis' : 'item',
-      formatter: (params: any) => {
-        const [xIndex, yIndex] = isHorizontal ? [1, 0] : [0, 1];
-        const xValue: number = richTooltip
-          ? params[0].value[xIndex]
-          : params.value[xIndex];
-        const forecastValue: any[] = richTooltip ? params : [params];
-        const sortedKeys = extractTooltipKeys(
-          forecastValue,
-          yIndex,
-          richTooltip,
-          tooltipSortByMetric,
-        );
-        const forecastValues: Record<string, ForecastValue> =
-          extractForecastValuesFromTooltipParams(forecastValue, isHorizontal);
+      formatter: pinterestDeltaTable
+        ? getDeltaTableTooltipFormatter(chartProps, () => focusedSeries)
+        : (params: any) => {
+            const [xIndex, yIndex] = isHorizontal ? [1, 0] : [0, 1];
+            const xValue: number = richTooltip
+              ? params[0].value[xIndex]
+              : params.value[xIndex];
+            const forecastValue: any[] = richTooltip ? params : [params];
+            const sortedKeys = extractTooltipKeys(
+              forecastValue,
+              yIndex,
+              richTooltip,
+              tooltipSortByMetric,
+            );
+            const forecastValues: Record<string, ForecastValue> =
+              extractForecastValuesFromTooltipParams(
+                forecastValue,
+                isHorizontal,
+              );
 
-        const isForecast = Object.values(forecastValues).some(
-          value =>
-            value.forecastTrend || value.forecastLower || value.forecastUpper,
-        );
+            const isForecast = Object.values(forecastValues).some(
+              value =>
+                value.forecastTrend ||
+                value.forecastLower ||
+                value.forecastUpper,
+            );
 
         const formatter = forcePercentFormatter
           ? percentFormatter
