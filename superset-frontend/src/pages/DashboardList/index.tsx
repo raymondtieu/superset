@@ -739,6 +739,7 @@ function DashboardList(props: DashboardListProps) {
                   show
                   onHide={() => setDashboardToEdit(null)}
                   onSubmit={handleDashboardEdit}
+                  user={user}
                 />
               )}
               {dashboardToDelete && (
