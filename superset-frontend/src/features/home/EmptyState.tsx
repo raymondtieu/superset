@@ -22,7 +22,7 @@ import { TableTab } from 'src/views/CRUD/types';
 import { styled, t } from '@superset-ui/core';
 import { WelcomeTable } from './types';
 
-const EmptyContainer = styled.div`
+export const EmptyContainer = styled.div`
   min-height: 200px;
   display: flex;
   color: ${({ theme }) => theme.colors.grayscale.light2};
