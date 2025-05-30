@@ -55,6 +55,7 @@ import { LOG_ACTIONS_CHART_DOWNLOAD_AS_IMAGE } from 'src/logger/LogUtils';
 import { MenuKeys, RootState } from 'src/dashboard/types';
 import DrillDetailModal from 'src/components/Chart/DrillDetail/DrillDetailModal';
 import { usePermissions } from 'src/hooks/usePermissions';
+import ViewTableInfoModal from 'src/explore/components/controls/ViewTableInfoModal';
 import { useCrossFiltersScopingModal } from '../nativeFilters/FilterBar/CrossFilters/ScopingModal/useCrossFiltersScopingModal';
 import { ViewResultsModalTrigger } from './ViewResultsModalTrigger';
 
@@ -411,7 +412,24 @@ const SliceHeaderControls = (
           />
         </Menu.Item>
       )}
-
+      <Menu.Item key={MenuKeys.ViewTableInfo}>
+        <ModalTrigger
+          triggerNode={
+            <span data-test="view-table-info-menu-item">
+              {t('View table info')}
+            </span>
+          }
+          modalTitle={t('View table info')}
+          modalBody={
+            <ViewTableInfoModal
+              datasetId={Number(props.slice.datasource.split('__')[0])}
+            />
+          }
+          draggable
+          resizable
+          responsive
+        />
+      </Menu.Item>
       {(canExplore || canViewTable) && (
         <Menu.Item key={MenuKeys.ViewResults}>
           <ViewResultsModalTrigger
