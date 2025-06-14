@@ -1,3 +1,20 @@
+import {
+  DatasourceType,
+  FeatureFlag,
+  SupersetClient,
+  css,
+  ensureIsArray,
+  getChartMetadataRegistry,
+  isFeatureEnabled,
+  styled,
+  t,
+  useTheme,
+} from '@superset-ui/core';
+import {
+  LocalStorageKeys,
+  getItem,
+  setItem,
+} from 'src/utils/localStorageHelpers';
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,35 +33,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import Split from 'react-split';
-import {
-  css,
-  DatasourceType,
-  ensureIsArray,
-  isFeatureEnabled,
-  FeatureFlag,
-  getChartMetadataRegistry,
-  styled,
-  SupersetClient,
-  t,
-  useTheme,
-} from '@superset-ui/core';
-import { chartPropShape } from 'src/dashboard/util/propShapes';
-import ChartContainer from 'src/components/Chart/ChartContainer';
-import {
-  getItem,
-  setItem,
-  LocalStorageKeys,
-} from 'src/utils/localStorageHelpers';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import Alert from 'src/components/Alert';
-import { SaveDatasetModal } from 'src/SqlLab/components/SaveDatasetModal';
+import ChartContainer from 'src/components/Chart/ChartContainer';
 import { getDatasourceAsSaveableDataset } from 'src/utils/datasourceUtils';
+import { SaveDatasetModal } from 'src/SqlLab/components/SaveDatasetModal';
 import { buildV1ChartDataPayload } from 'src/explore/exploreUtils';
+import { chartPropShape } from 'src/dashboard/util/propShapes';
 import { getChartRequiredFieldsMissingMessage } from 'src/utils/getChartRequiredFieldsMissingMessage';
-import { DataTablesPane } from '../DataTablesPane';
+
 import { ChartPills } from '../ChartPills';
+import { DataTablesPane } from '../DataTablesPane';
 import { ExploreAlert } from '../ExploreAlert';
 import useResizeDetectorByObserver from './useResizeDetectorByObserver';
 
@@ -71,6 +73,7 @@ const propTypes = {
   chart: chartPropShape,
   errorMessage: PropTypes.node,
   triggerRender: PropTypes.bool,
+  isDex: PropTypes.bool,
 };
 
 const GUTTER_SIZE_FACTOR = 1.25;
@@ -138,6 +141,7 @@ const ExploreChartPanel = ({
   chartIsStale,
   chartAlert,
   can_download: canDownload,
+  isDex,
 }) => {
   const theme = useTheme();
   const gutterMargin = theme.gridUnit * GUTTER_SIZE_FACTOR;
@@ -441,17 +445,19 @@ const ExploreChartPanel = ({
         expandToMin
       >
         {panelBody}
-        <DataTablesPane
-          ownState={ownState}
-          queryFormData={queryFormData}
-          datasource={datasource}
-          queryForce={force}
-          onCollapseChange={onCollapseChange}
-          chartStatus={chart.chartStatus}
-          errorMessage={errorMessage}
-          actions={actions}
-          canDownload={canDownload}
-        />
+        {!isDex && (
+          <DataTablesPane
+            ownState={ownState}
+            queryFormData={queryFormData}
+            datasource={datasource}
+            queryForce={force}
+            onCollapseChange={onCollapseChange}
+            chartStatus={chart.chartStatus}
+            errorMessage={errorMessage}
+            actions={actions}
+            canDownload={canDownload}
+          />
+        )}
       </Split>
       {showDatasetModal && (
         <SaveDatasetModal
