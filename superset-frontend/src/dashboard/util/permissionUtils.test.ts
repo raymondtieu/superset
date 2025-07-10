@@ -202,3 +202,59 @@ test('canUserSaveAsDashboard returns false if user does not have write permissio
 test('canUserSaveAsDashboard always returns false for undefined user', () => {
   expect(canUserSaveAsDashboard(dashboard, undefinedUser)).toEqual(false);
 });
+
+// The usage of the RBAC feature flag was removed from canUserSaveAsDashboard.
+// Skipping the old test cases for future rebases.
+describe.skip('canUserSaveAsDashboard with RBAC feature flag disabled', () => {
+  beforeAll(() => {
+    isFeatureEnabledMock = jest
+      .spyOn(uiCore, 'isFeatureEnabled')
+      .mockImplementation(
+        (featureFlag: uiCore.FeatureFlag) =>
+          featureFlag !== uiCore.FeatureFlag.DashboardRbac,
+      );
+  });
+
+  afterAll(() => {
+    isFeatureEnabledMock.mockRestore();
+  });
+
+  it('allows owners', () => {
+    expect(canUserSaveAsDashboard(dashboard, ownerUser)).toEqual(true);
+  });
+
+  it('allows admin users', () => {
+    expect(canUserSaveAsDashboard(dashboard, adminUser)).toEqual(true);
+  });
+
+  it('allows non-owners', () => {
+    expect(canUserSaveAsDashboard(dashboard, outsiderUser)).toEqual(true);
+  });
+});
+
+describe.skip('canUserSaveAsDashboard with RBAC feature flag enabled', () => {
+  beforeAll(() => {
+    isFeatureEnabledMock = jest
+      .spyOn(uiCore, 'isFeatureEnabled')
+      .mockImplementation(
+        (featureFlag: uiCore.FeatureFlag) =>
+          featureFlag === uiCore.FeatureFlag.DashboardRbac,
+      );
+  });
+
+  afterAll(() => {
+    isFeatureEnabledMock.mockRestore();
+  });
+
+  it('allows owners', () => {
+    expect(canUserSaveAsDashboard(dashboard, ownerUser)).toEqual(true);
+  });
+
+  it('allows admin users', () => {
+    expect(canUserSaveAsDashboard(dashboard, adminUser)).toEqual(true);
+  });
+
+  it('reject non-owners', () => {
+    expect(canUserSaveAsDashboard(dashboard, outsiderUser)).toEqual(false);
+  });
+});
