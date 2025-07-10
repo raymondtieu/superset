@@ -65,6 +65,13 @@ const owner: Owner = {
   last_name: 'User',
 };
 
+const readOnlyUser: UserWithPermissionsAndRoles = {
+  ...ownerUser,
+  roles: { Alpha: [['can_read', 'Dashboard']] },
+  userId: 4,
+  username: 'readonly',
+};
+
 const sqlLabMenuAccessPermission: [string, string] = ['menu_access', 'SQL Lab'];
 
 const arbitraryPermissions: [string, string][] = [
@@ -182,56 +189,16 @@ test('userHasPermission returns true if user has permission', () => {
   ).toEqual(true);
 });
 
-describe('canUserSaveAsDashboard with RBAC feature flag disabled', () => {
-  beforeAll(() => {
-    isFeatureEnabledMock = jest
-      .spyOn(uiCore, 'isFeatureEnabled')
-      .mockImplementation(
-        (featureFlag: uiCore.FeatureFlag) =>
-          featureFlag !== uiCore.FeatureFlag.DashboardRbac,
-      );
-  });
-
-  afterAll(() => {
-    isFeatureEnabledMock.mockRestore();
-  });
-
-  it('allows owners', () => {
-    expect(canUserSaveAsDashboard(dashboard, ownerUser)).toEqual(true);
-  });
-
-  it('allows admin users', () => {
-    expect(canUserSaveAsDashboard(dashboard, adminUser)).toEqual(true);
-  });
-
-  it('allows non-owners', () => {
-    expect(canUserSaveAsDashboard(dashboard, outsiderUser)).toEqual(true);
-  });
+test('canUserSaveAsDashboard returns true if user has write permission', () => {
+  expect(canUserSaveAsDashboard(dashboard, adminUser)).toEqual(true);
+  expect(canUserSaveAsDashboard(dashboard, ownerUser)).toEqual(true);
+  expect(canUserSaveAsDashboard(dashboard, outsiderUser)).toEqual(true);
 });
 
-describe('canUserSaveAsDashboard with RBAC feature flag enabled', () => {
-  beforeAll(() => {
-    isFeatureEnabledMock = jest
-      .spyOn(uiCore, 'isFeatureEnabled')
-      .mockImplementation(
-        (featureFlag: uiCore.FeatureFlag) =>
-          featureFlag === uiCore.FeatureFlag.DashboardRbac,
-      );
-  });
+test('canUserSaveAsDashboard returns false if user does not have write permission', () => {
+  expect(canUserSaveAsDashboard(dashboard, readOnlyUser)).toEqual(false);
+});
 
-  afterAll(() => {
-    isFeatureEnabledMock.mockRestore();
-  });
-
-  it('allows owners', () => {
-    expect(canUserSaveAsDashboard(dashboard, ownerUser)).toEqual(true);
-  });
-
-  it('allows admin users', () => {
-    expect(canUserSaveAsDashboard(dashboard, adminUser)).toEqual(true);
-  });
-
-  it('reject non-owners', () => {
-    expect(canUserSaveAsDashboard(dashboard, outsiderUser)).toEqual(false);
-  });
+test('canUserSaveAsDashboard always returns false for undefined user', () => {
+  expect(canUserSaveAsDashboard(dashboard, undefinedUser)).toEqual(false);
 });
