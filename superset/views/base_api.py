@@ -300,7 +300,7 @@ class BaseSupersetModelRestApi(BaseSupersetApiMixin, ModelRestApi):
         }
     """
 
-    extra_fields_rel_fields: dict[str, list[str]] = {"owners": ["email", "active"]}
+    extra_fields_rel_fields: dict[str, list[str]] = {"owners": ["email", "active", "username"]}
     """
     Declare extra fields for the representation of the Model object::
 

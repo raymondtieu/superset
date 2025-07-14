@@ -125,6 +125,84 @@ const createFetchResourceMethod =
     };
   };
 
+const createFetchResourceMethodFormatted =
+  (method: string) =>
+  (
+    resource: string,
+    relation: string,
+    handleError: (error: Response) => void,
+    handleLabelFormatting: (data: {
+      text: string;
+      value: string | number;
+      extra?: any;
+    }) => string,
+    user?: {
+      userId: string | number;
+      firstName: string;
+      lastName: string;
+      username?: string;
+    },
+  ) =>
+  async (filterValue = '', page: number, pageSize: number) => {
+    const resourceEndpoint = `/api/v1/${resource}/${method}/${relation}`;
+    const queryParams = rison.encode_uri({
+      filter: filterValue,
+      page,
+      page_size: pageSize,
+    });
+    const { json = {} } = await SupersetClient.get({
+      endpoint: `${resourceEndpoint}?q=${queryParams}`,
+    });
+
+    let fetchedLoggedUser = false;
+    const loggedUser = user
+      ? {
+          label: `${user.firstName} ${user.lastName}`,
+          value: user.userId,
+        }
+      : undefined;
+
+    const data: { label: string; value: string | number }[] = [];
+    json?.result
+      ?.filter(({ text }: { text: string }) => text.trim().length > 0)
+      .forEach(
+        ({
+          text,
+          value,
+          extra,
+        }: {
+          text: string;
+          value: string | number;
+          extra?: any;
+        }) => {
+          if (
+            loggedUser &&
+            value === loggedUser.value &&
+            text === loggedUser.label
+          ) {
+            fetchedLoggedUser = true;
+            loggedUser.label = handleLabelFormatting({ text, value, extra });
+          } else {
+            data.push({
+              label: handleLabelFormatting({ text, value, extra }),
+              value,
+            });
+          }
+        },
+      );
+
+    if (loggedUser && (!filterValue || fetchedLoggedUser)) {
+      data.unshift(loggedUser);
+    }
+
+    console.log(data);
+
+    return {
+      data,
+      totalCount: json?.count,
+    };
+  };
+
 export const PAGE_SIZE = 5;
 const getParams = (filters?: Filter[], selectColumns?: string[]) => {
   const params = {
@@ -247,6 +325,8 @@ export const getRecentActivityObjs = (
 
 export const createFetchRelated = createFetchResourceMethod('related');
 export const createFetchDistinct = createFetchResourceMethod('distinct');
+export const createFetchRelatedFormatted =
+  createFetchResourceMethodFormatted('related');
 
 export function createErrorHandler(
   handleErrorFunc: (
