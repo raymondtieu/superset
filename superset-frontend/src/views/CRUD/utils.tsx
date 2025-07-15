@@ -195,8 +195,6 @@ const createFetchResourceMethodFormatted =
       data.unshift(loggedUser);
     }
 
-    console.log(data);
-
     return {
       data,
       totalCount: json?.count,
