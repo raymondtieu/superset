@@ -30,7 +30,6 @@ import rison from 'rison';
 import {
   createFetchRelated,
   createErrorHandler,
-  createFetchRelatedFormatted,
   handleDashboardDelete,
 } from 'src/views/CRUD/utils';
 import { useListViewResource, useFavoriteStatus } from 'src/views/CRUD/hooks';
@@ -559,7 +558,7 @@ function DashboardList(props: DashboardListProps) {
         input: 'select',
         operator: FilterOperator.RelationManyMany,
         unfilteredLabel: t('All'),
-        fetchSelects: createFetchRelatedFormatted(
+        fetchSelects: createFetchRelated(
           'dashboard',
           'owners',
           createErrorHandler(errMsg =>
@@ -570,10 +569,6 @@ function DashboardList(props: DashboardListProps) {
               ),
             ),
           ),
-          (data: { text: string; value: string | number; extra?: any }) =>
-            data.extra?.username
-              ? `${data.text} (${data.extra.username})`
-              : data.text,
           props.user,
         ),
         paginate: true,

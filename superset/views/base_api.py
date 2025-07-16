@@ -377,6 +377,9 @@ class BaseSupersetModelRestApi(BaseSupersetApiMixin, ModelRestApi):
         return filters
 
     def _get_text_for_model(self, model: Model, column_name: str) -> str:
+        # Special case for owners, we want to return the full name and username
+        if column_name == "owners":
+            return f"{model.first_name} {model.last_name} ({model.username})"
         if column_name in self.text_field_rel_fields:
             model_column_name = self.text_field_rel_fields.get(column_name)
             if model_column_name:
