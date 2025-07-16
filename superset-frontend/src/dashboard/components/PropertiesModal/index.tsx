@@ -159,18 +159,10 @@ const PropertiesModal = ({
           .filter((item: { extra: { active: boolean } }) =>
             item.extra.active !== undefined ? item.extra.active : true,
           )
-          .map(
-            (item: {
-              value: number;
-              text: string;
-              extra: { username: string };
-            }) => ({
-              value: item.value,
-              label: item.extra?.username
-                ? `${item.text} (${item.extra.username})`
-                : item.text,
-            }),
-          ),
+          .map((item: { value: number; text: string }) => ({
+            value: item.value,
+            label: item.text,
+          })),
         totalCount: response.json.count,
       }));
     },
