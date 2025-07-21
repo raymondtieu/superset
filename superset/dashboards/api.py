@@ -232,6 +232,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         "dashboard_title",
         "published",
         "changed_on",
+        "favorite_count",
     ]
 
     add_columns = [

@@ -35,11 +35,17 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
+    and_,
+    func,
+    select,
 )
 from sqlalchemy.engine.base import Connection
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, subqueryload
 from sqlalchemy.orm.mapper import Mapper
 from sqlalchemy.sql.elements import BinaryExpression
+
+from superset.models.core import FavStar
 
 from superset import app, db, is_feature_enabled, security_manager
 from superset.connectors.sqla.models import BaseDatasource, SqlaTable
@@ -156,6 +162,12 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         "TaggedObject.object_type == 'dashboard')",
         secondaryjoin="TaggedObject.tag_id == Tag.id",
         viewonly=True,  # cascading deletion already handled by superset.tags.models.ObjectUpdater.after_delete
+    )
+    favorites = relationship(
+        FavStar,
+        primaryjoin="and_(Dashboard.id == foreign(FavStar.obj_id), "
+        "FavStar.class_name == 'Dashboard')",
+        viewonly=True,  # cascading deletion already handled by superset.models.core.ObjectUpdater.after_delete
     )
     published = Column(Boolean, default=False)
     is_managed_externally = Column(Boolean, nullable=False, default=False)
@@ -345,6 +357,23 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
             build_tab_tree(node, children)
 
         return {"all_tabs": all_tabs, "tab_tree": tab_tree}
+
+    @hybrid_property
+    def favorite_count(self) -> int:
+        """
+        Returns the number of users who have favorited this dashboard.
+        """
+        return len(self.favorites)
+
+    @favorite_count.expression
+    def favorite_count(cls):
+        """SQL expression for favorite count in queries"""
+        return (
+            select(func.count(FavStar.id))
+            .where(FavStar.obj_id == cls.id)
+            .where(FavStar.class_name == 'Dashboard')
+            .scalar_subquery()
+        )
 
     def update_thumbnail(self) -> None:
         cache_dashboard_thumbnail.delay(
