@@ -52,6 +52,7 @@ from superset.daos.datasource import DatasourceDAO
 from superset.models.core import FavStar
 from superset.models.helpers import AuditMixinNullable, ImportExportMixin
 from superset.models.slice import Slice
+from superset.tags.models import Tag, TaggedObject, TagType
 from superset.models.user_attributes import UserAttribute
 from superset.tasks.thumbnails import cache_dashboard_thumbnail
 from superset.tasks.utils import get_current_user
@@ -358,6 +359,16 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
 
         return {"all_tabs": all_tabs, "tab_tree": tab_tree}
 
+    @property
+    def favorited_by_tags(self) -> int:
+        """
+        Returns the number of favorites for this dashboard.
+        """
+        return len([
+            tag for tag in self.tags
+            if hasattr(tag, 'type') and tag.type == TagType.favorited_by
+        ])
+
     @hybrid_property
     def relevance_score(self) -> float:
         """
@@ -367,7 +378,7 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         missing_title_penalty = 1000
         deprecated_title_penalty = 10000
 
-        score = len(self.favorites)
+        score = len(self.favorites) + self.favorited_by_tags
 
         if not self.dashboard_title:
             score -= missing_title_penalty
@@ -389,12 +400,29 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         missing_title_penalty = 1000
         deprecated_title_penalty = 10000
 
-        return (
-            # Start with favorite count
+        favstar_count = (
             select(func.count(FavStar.id))
             .where(FavStar.obj_id == cls.id)
             .where(FavStar.class_name == 'Dashboard')
             .scalar_subquery()
+        )
+
+        tag_favorites_count = (
+            select(func.count(Tag.id))
+            .select_from(
+                TaggedObject.__table__.join(
+                    Tag.__table__, TaggedObject.tag_id == Tag.id
+                )
+            )
+            .where(TaggedObject.object_id == cls.id)
+            .where(TaggedObject.object_type == 'dashboard')
+            .where(Tag.type == TagType.favorited_by)
+            .scalar_subquery()
+        )
+
+        return (
+            # Start with favorite count from both sources
+            favstar_count + tag_favorites_count
             # Subtract penalty for deprecated titles
             - case(
                 (
