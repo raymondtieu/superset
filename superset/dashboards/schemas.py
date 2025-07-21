@@ -212,7 +212,6 @@ class DashboardGetResponseSchema(Schema):
     changed_on_humanized = fields.String(data_key="changed_on_delta_humanized")
     created_on_humanized = fields.String(data_key="created_on_delta_humanized")
     is_managed_externally = fields.Boolean(allow_none=True, dump_default=False)
-    relevance_score = fields.Float()
 
     # pylint: disable=unused-argument
     @post_dump()
