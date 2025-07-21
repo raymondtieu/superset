@@ -31,7 +31,7 @@ from flask_babel import gettext, ngettext
 from marshmallow import ValidationError
 from werkzeug.wrappers import Response as WerkzeugResponse
 from werkzeug.wsgi import FileWrapper
-
+from sqlalchemy import desc, asc
 from superset import db, is_feature_enabled, thumbnail_cache
 from superset.charts.schemas import ChartEntityResponseSchema
 from superset.commands.dashboard.copy import CopyDashboardCommand
@@ -222,6 +222,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         "tags.id",
         "tags.name",
         "tags.type",
+        "relevance_score",
     ]
 
     list_select_columns = list_columns + ["changed_on", "created_on", "changed_by_fk"]
@@ -232,7 +233,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         "dashboard_title",
         "published",
         "changed_on",
-        "favorite_count",
+        "relevance_score",
     ]
 
     add_columns = [
@@ -334,6 +335,39 @@ class DashboardRestApi(BaseSupersetModelRestApi):
             self.appbuilder.app.config["VERSION_STRING"],
             self.appbuilder.app.config["VERSION_SHA"],
         )
+
+    def __init__(self):
+        super().__init__()
+        original_apply_order_by = self.datamodel.apply_order_by
+
+        # Override the apply_order_by method to handle relevance_score ordering
+        def custom_apply_order_by(
+            query, order_column, order_direction, **kwargs
+        ):
+            if order_column == "relevance_score":
+                # Clear any existing ordering
+                query = query.order_by(None)
+
+                # Apply custom ordering based on relevance_score
+                if order_direction == "desc":
+                    return query.order_by(
+                        Dashboard.relevance_score.desc(),
+                        Dashboard.published.desc(),
+                        Dashboard.dashboard_title.asc()
+                    )
+                else:
+                    return query.order_by(
+                        Dashboard.relevance_score.asc(),
+                        Dashboard.published.asc(),
+                        Dashboard.dashboard_title.asc()
+                    )
+
+            # For all other columns, use the original method
+            return original_apply_order_by(
+                query, order_column, order_direction, **kwargs
+            )
+
+        self.datamodel.apply_order_by = custom_apply_order_by
 
     @expose("/<id_or_slug>", methods=("GET",))
     @protect()

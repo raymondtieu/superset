@@ -35,9 +35,10 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
-    and_,
+    case,
     func,
     select,
+    or_
 )
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -359,20 +360,61 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         return {"all_tabs": all_tabs, "tab_tree": tab_tree}
 
     @hybrid_property
-    def favorite_count(self) -> int:
+    def relevance_score(self) -> float:
         """
-        Returns the number of users who have favorited this dashboard.
+        Returns a relevance score for the dashboard based on its favorite count.
+        This is used for sorting dashboards in the list view.
         """
-        return len(self.favorites)
+        missing_title_penalty = 1000
+        deprecated_title_penalty = 10000
 
-    @favorite_count.expression
-    def favorite_count(cls):
-        """SQL expression for favorite count in queries"""
+        score = len(self.favorites)
+
+        if not self.dashboard_title:
+            score -= missing_title_penalty
+            return score
+        if self.dashboard_title:
+            if self.dashboard_title.lower().startswith("[ untitled]"):
+                score -= missing_title_penalty
+
+            if self.dashboard_title.lower().startswith("[deprecated]"):
+                score -= deprecated_title_penalty
+
+        return score
+
+    @relevance_score.expression
+    def relevance_score(cls):
+        """
+        SQL expression for relevance score in queries
+        """
+        missing_title_penalty = 1000
+        deprecated_title_penalty = 10000
+
         return (
+            # Start with favorite count
             select(func.count(FavStar.id))
             .where(FavStar.obj_id == cls.id)
             .where(FavStar.class_name == 'Dashboard')
             .scalar_subquery()
+            # Subtract penalty for deprecated titles
+            - case(
+                (
+                    func.lower(cls.dashboard_title).like('[deprecated]%'),
+                    deprecated_title_penalty
+                ),
+                else_=0
+            )
+            # Subtract penalty for missing titles
+            - case(
+                (
+                    or_(
+                        cls.dashboard_title.is_(None),
+                        func.lower(cls.dashboard_title).like('[ untitled dashboard ]%')
+                    ),
+                    missing_title_penalty,
+                ),
+                else_=0
+            )
         )
 
     def update_thumbnail(self) -> None:
