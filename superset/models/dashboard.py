@@ -37,8 +37,8 @@ from sqlalchemy import (
     UniqueConstraint,
     case,
     func,
+    or_,
     select,
-    or_
 )
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -46,11 +46,10 @@ from sqlalchemy.orm import relationship, subqueryload
 from sqlalchemy.orm.mapper import Mapper
 from sqlalchemy.sql.elements import BinaryExpression
 
-from superset.models.core import FavStar
-
 from superset import app, db, is_feature_enabled, security_manager
 from superset.connectors.sqla.models import BaseDatasource, SqlaTable
 from superset.daos.datasource import DatasourceDAO
+from superset.models.core import FavStar
 from superset.models.helpers import AuditMixinNullable, ImportExportMixin
 from superset.models.slice import Slice
 from superset.models.user_attributes import UserAttribute
