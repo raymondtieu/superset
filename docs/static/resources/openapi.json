@@ -20168,7 +20168,6 @@
         ]
       }
     },
-
     "/api/v1/dataset/{pk}/table_metadata": {
       "get": {
         "description": "Get metadata fields for each table referenced in the dataset.",
@@ -20197,7 +20196,7 @@
             "$ref": "#/components/responses/404"
           },
           "422": {
-            "$ref": "#/components/responses/]"
+            "$ref": "#/components/responses/422"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -20241,7 +20240,7 @@
             "$ref": "#/components/responses/404"
           },
           "422": {
-            "$ref": "#/components/responses/]"
+            "$ref": "#/components/responses/422"
           },
           "500": {
             "$ref": "#/components/responses/500"
