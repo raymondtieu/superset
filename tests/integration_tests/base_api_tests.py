@@ -289,23 +289,23 @@ class ApiOwnersTestCaseMixin:
         sorted_results = sorted(response["result"], key=lambda value: value["text"])
         expected_results = [
             {
-                "extra": {"active": True, "email": "gamma@fab.org"},
-                "text": "gamma user",
+                "extra": {"active": True, "email": "gamma@fab.org", "username": "gamma"},
+                "text": "gamma user (gamma)",
                 "value": 2,
             },
             {
-                "extra": {"active": True, "email": "gamma2@fab.org"},
-                "text": "gamma2 user",
+                "extra": {"active": True, "email": "gamma2@fab.org", "username": "gamma2"},
+                "text": "gamma2 user (gamma2)",
                 "value": 3,
             },
             {
-                "extra": {"active": True, "email": "gamma_no_csv@fab.org"},
-                "text": "gamma_no_csv user",
+                "extra": {"active": True, "email": "gamma_no_csv@fab.org", "username": "gamma_no_csv"},
+                "text": "gamma_no_csv user (gamma_no_csv)",
                 "value": 6,
             },
             {
-                "extra": {"active": True, "email": "gamma_sqllab@fab.org"},
-                "text": "gamma_sqllab user",
+                "extra": {"active": True, "email": "gamma_sqllab@fab.org", "username": "gamma_sqllab"},
+                "text": "gamma_sqllab user (gamma_sqllab)",
                 "value": 4,
             },
         ]
