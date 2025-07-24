@@ -212,7 +212,12 @@ class ApiOwnersTestCaseMixin:
         assert rv.status_code == 200
         response = json.loads(rv.data.decode("utf-8"))
         users = db.session.query(security_manager.user_model).all()
-        expected_users = [str(user) for user in users]
+        expected_users = [
+            f"{user.first_name} {user.last_name} ({user.username})"
+            if user.username
+            else str(user)
+            for user in users
+        ]
         assert response["count"] == len(users)
         # This needs to be implemented like this, because ordering varies between
         # postgres and mysql
@@ -238,7 +243,7 @@ class ApiOwnersTestCaseMixin:
             assert rv.status_code == 200
             response = json.loads(rv.data.decode("utf-8"))
             response_users = [result["text"] for result in response["result"]]
-            assert response_users == ["alpha user"]
+            assert response_users == ["alpha user (alpha)"]
 
     def test_get_related_owners_paginated(self):
         """
@@ -260,7 +265,12 @@ class ApiOwnersTestCaseMixin:
         assert len(response["result"]) == min(page_size, len(users))
 
         # make sure all received users are included in the full set of users
-        all_users = [str(user) for user in users]
+        all_users = [
+            f"{user.first_name} {user.last_name} ({user.username})"
+            if user.username
+            else str(user)
+            for user in users
+        ]
         for received_user in [result["text"] for result in response["result"]]:
             assert received_user in all_users
 
