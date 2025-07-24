@@ -510,6 +510,7 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
                         "id": 1,
                         "first_name": "admin",
                         "last_name": "user",
+                        "username": "admin"
                     }
                 ],
                 "roles": [],
