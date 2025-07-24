@@ -1727,7 +1727,8 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         current_dash = [d for d in res if d["id"] == dashboard_id][0]
         self.assertEqual(current_dash["dashboard_title"], "title2")
         self.assertNotIn("username", current_dash["changed_by"].keys())
-        self.assertNotIn("username", current_dash["owners"][0].keys())
+        # Added username in owners object
+        # self.assertNotIn("username", current_dash["owners"][0].keys())
 
         db.session.delete(model)
         db.session.commit()
@@ -1753,7 +1754,8 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
 
         self.assertEqual(res["dashboard_title"], "title2")
         self.assertNotIn("username", res["changed_by"].keys())
-        self.assertNotIn("username", res["owners"][0].keys())
+        # Added username in owners object
+        # self.assertNotIn("username", res["owners"][0].keys())
 
         db.session.delete(model)
         db.session.commit()
