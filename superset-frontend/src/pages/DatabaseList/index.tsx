@@ -75,6 +75,7 @@ interface DatabaseListProps {
     userId: string | number;
     firstName: string;
     lastName: string;
+    username: string;
   };
 }
 
