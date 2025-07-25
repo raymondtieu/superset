@@ -62,6 +62,8 @@ metadata = Model.metadata  # pylint: disable=no-member
 config = app.config
 logger = logging.getLogger(__name__)
 
+MISSING_TITLE_PENALTY = 1000
+DEPRECATED_TITLE_PENALTY = 10000
 
 def copy_dashboard(_mapper: Mapper, _connection: Connection, target: Dashboard) -> None:
     dashboard_id = config["DASHBOARD_TEMPLATE_ID"]
@@ -364,20 +366,24 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         Returns a relevance score for the dashboard based on its favorite count.
         This is used for sorting dashboards in the list view.
         """
-        missing_title_penalty = 1000
-        deprecated_title_penalty = 10000
-
         score = len(self.favorites)
 
         if not self.dashboard_title:
-            score -= missing_title_penalty
+            score -= MISSING_TITLE_PENALTY
             return score
         if self.dashboard_title:
-            if self.dashboard_title.lower().startswith("[ untitled]"):
-                score -= missing_title_penalty
+            title_lower = self.dashboard_title.lower().trim()
 
-            if self.dashboard_title.lower().startswith("[deprecated]"):
-                score -= deprecated_title_penalty
+            if title_lower.startswith("[ untitled ]"):
+                score -= MISSING_TITLE_PENALTY
+
+            if (
+                title_lower.startswith("[deprecated]")
+                or title_lower.endswith("[deprecated]")
+                or title_lower.startswith("(deprecated)")
+                or title_lower.endswith("(deprecated)")
+            ):
+                score -= DEPRECATED_TITLE_PENALTY
 
         return score
 
@@ -386,33 +392,29 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         """
         SQL expression for relevance score in queries
         """
-        missing_title_penalty = 1000
-        deprecated_title_penalty = 10000
-
         return (
             # Start with favorite count
             select(func.count(FavStar.id))
             .where(FavStar.obj_id == cls.id)
             .where(FavStar.class_name == 'Dashboard')
             .scalar_subquery()
-            # Subtract penalty for deprecated titles
-            - case(
-                (
-                    func.lower(cls.dashboard_title).like('[deprecated]%'),
-                    deprecated_title_penalty
-                ),
-                else_=0
-            )
             # Subtract penalty for missing titles
             - case(
-                (
-                    or_(
-                        cls.dashboard_title.is_(None),
-                        func.lower(cls.dashboard_title).like('[ untitled dashboard ]%')
-                    ),
-                    missing_title_penalty,
-                ),
-                else_=0
+                [
+                    (cls.dashboard_title.is_(None), MISSING_TITLE_PENALTY),
+                    (func.lower(func.trim(cls.dashboard_title)).like('[ untitled ]%'), MISSING_TITLE_PENALTY),
+                ],
+                else_=0,
+            )
+            # Subtract penalty for deprecated titles
+            - case(
+                [
+                    (func.lower(func.trim(cls.dashboard_title)).like('[deprecated]%'), DEPRECATED_TITLE_PENALTY),
+                    (func.lower(func.trim(cls.dashboard_title)).like('%[deprecated]'), DEPRECATED_TITLE_PENALTY),
+                    (func.lower(func.trim(cls.dashboard_title)).like('(deprecated)%'), DEPRECATED_TITLE_PENALTY),
+                    (func.lower(func.trim(cls.dashboard_title)).like('%(deprecated)'), DEPRECATED_TITLE_PENALTY),
+                ],
+                else_=0,
             )
         )
 
