@@ -66,6 +66,7 @@ import {
 } from 'src/features/alerts/types';
 import { useSelector } from 'react-redux';
 import { UserWithPermissionsAndRoles } from 'src/types/bootstrapTypes';
+import { getOwnerDisplayName } from 'src/utils/getOwnerName';
 import NumberInput from './components/NumberInput';
 import { AlertReportCronScheduler } from './components/AlertReportCronScheduler';
 import { NotificationMethod } from './components/NotificationMethod';
@@ -1164,7 +1165,13 @@ const AlertReportModal: FunctionComponent<AlertReportModalProps> = ({
           ? [
               {
                 value: currentUser.userId,
-                label: `${currentUser.firstName} ${currentUser.lastName}`,
+                // label: `${currentUser.firstName} ${currentUser.lastName}`
+                label: getOwnerDisplayName({
+                  ...currentUser,
+                  first_name: currentUser.firstName,
+                  last_name: currentUser.lastName,
+                  id: currentUser.userId,
+                } as Owner),
               },
             ]
           : [],
@@ -1243,8 +1250,9 @@ const AlertReportModal: FunctionComponent<AlertReportModalProps> = ({
         owners: (alert?.owners || []).map(owner => ({
           value: (owner as MetaObject).value || owner.id,
           label:
-            (owner as MetaObject).label ||
-            `${(owner as Owner).first_name} ${(owner as Owner).last_name}`,
+            // (owner as MetaObject).label ||
+            // `${(owner as Owner).first_name} ${(owner as Owner).last_name}`,
+            (owner as MetaObject).label || getOwnerDisplayName(owner as Owner),
         })),
         // @ts-ignore: Type not assignable
         validator_config_json:
