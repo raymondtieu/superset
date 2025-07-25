@@ -1754,8 +1754,8 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         res = json.loads(response.data.decode("utf-8"))["result"]
 
         self.assertEqual(res["dashboard_title"], "title2")
-        self.assertNotIn("username", res["changed_by"].keys())
-        # Added username in owners object
+        # Added username to changed_by and owners
+        # self.assertNotIn("username", res["changed_by"].keys())
         # self.assertNotIn("username", res["owners"][0].keys())
 
         db.session.delete(model)
