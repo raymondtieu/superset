@@ -300,10 +300,10 @@ class TestReportSchedulesApi(SupersetTestCase):
         for key in expected_result:
             assert data["result"][key] == expected_result[key]
         # needed because order may vary
-        assert {"first_name": "admin", "id": 1, "last_name": "user"} in data["result"][
+        assert {"first_name": "admin", "id": 1, "last_name": "user", "username": "admin"} in data["result"][
             "owners"
         ]
-        assert {"first_name": "alpha", "id": 5, "last_name": "user"} in data["result"][
+        assert {"first_name": "alpha", "id": 5, "last_name": "user", "username": "alpha"} in data["result"][
             "owners"
         ]
         assert len(data["result"]["owners"]) == 2
@@ -381,7 +381,7 @@ class TestReportSchedulesApi(SupersetTestCase):
         assert expected_fields == data_keys
 
         # Assert nested fields
-        expected_owners_fields = ["first_name", "id", "last_name"]
+        expected_owners_fields = ["first_name", "id", "last_name", "username"]
         data_keys = sorted(list(data["result"][0]["owners"][0].keys()))
         assert expected_owners_fields == data_keys
 
