@@ -144,6 +144,7 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
     certification_details = Column(Text)
     json_metadata = Column(utils.MediumText())
     slug = Column(String(255), unique=True)
+    auto_sync_chart_owners = False  # TODO: read from db - Column(Boolean, default=False)
     slices: list[Slice] = relationship(
         Slice, secondary=dashboard_slices, backref="dashboards"
     )
@@ -475,6 +476,30 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         """
 
         security_manager.raise_for_access(dashboard=self)
+
+    def sync_dashboard_chart_owners(self) -> None:
+        """
+        Add the owners of this dashboard to be owners of each chart
+        when auto_sync_chart_owners is enabled.
+        A chart will have its own owners updated if the owners of the dashboard
+        and chart have mutual owners.
+        """
+        if not self.auto_sync_chart_owners:
+            return
+
+        dashboard_owner_ids = {owner.id for owner in self.owners}
+
+        for slice in self.slices:
+            slice_owner_ids = {owner.id for owner in slice.owners}
+
+            if not bool(dashboard_owner_ids & slice_owner_ids):
+                continue
+
+            if dashboard_owner_ids == slice_owner_ids:
+                continue
+
+            new_owners = set(slice.owners) | set(self.owners)
+            slice.owners = list(new_owners)
 
 
 def is_uuid(value: str | int) -> bool:
