@@ -144,7 +144,6 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
     certification_details = Column(Text)
     json_metadata = Column(utils.MediumText())
     slug = Column(String(255), unique=True)
-    auto_sync_chart_owners = False  # TODO: read from db - Column(Boolean, default=False)
     slices: list[Slice] = relationship(
         Slice, secondary=dashboard_slices, backref="dashboards"
     )
@@ -495,11 +494,20 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
             if not bool(dashboard_owner_ids & slice_owner_ids):
                 continue
 
-            if dashboard_owner_ids == slice_owner_ids:
+            if dashboard_owner_ids.issubset(slice_owner_ids):
                 continue
 
-            new_owners = set(slice.owners) | set(self.owners)
-            slice.owners = list(new_owners)
+            slice.owners = set(slice.owners) | set(self.owners)
+
+    @property
+    def auto_sync_chart_owners(self) -> bool:
+        return json.loads(self.params).get("auto_sync_chart_owners", False)
+
+    @auto_sync_chart_owners.setter
+    def auto_sync_chart_owners(self, value: bool) -> None:
+        metadata = json.loads(self.params or "{}")
+        metadata["auto_sync_chart_owners"] = value
+        self.params = json.dumps(metadata)
 
 
 def is_uuid(value: str | int) -> bool:
