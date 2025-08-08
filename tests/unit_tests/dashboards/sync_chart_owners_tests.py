@@ -1,8 +1,6 @@
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock
 from superset.models.dashboard import Dashboard
-from superset.models.slice import Slice
-from superset import db
 
 
 def test_sync_disabled_when_auto_sync_not_set() -> None:
