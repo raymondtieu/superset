@@ -499,6 +499,8 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
 
             slice.owners = set(slice.owners) | set(self.owners)
 
+        db.session.commit()
+
     @property
     def auto_sync_chart_owners(self) -> bool:
         return json.loads(self.params).get("auto_sync_chart_owners", False)
