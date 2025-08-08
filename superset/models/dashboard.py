@@ -483,21 +483,38 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         A chart will have its own owners updated if the owners of the dashboard
         and chart have mutual owners.
         """
+        logger.debug("Syncing dashboard chart owners for dashboard %s", self.id)
         if not self.auto_sync_chart_owners:
             return
 
         dashboard_owner_ids = {owner.id for owner in self.owners}
+        logger.debug("Dashboard owner IDs: %s", dashboard_owner_ids)
 
         for slice in self.slices:
             slice_owner_ids = {owner.id for owner in slice.owners}
+            logger.debug("Slice %s owner IDs: %s", slice.id, slice_owner_ids)
 
             if not bool(dashboard_owner_ids & slice_owner_ids):
+                logger.debug(
+                    "No mutual owners found for dashboard %s and slice %s",
+                    self.id,
+                    slice.id,
+                )
                 continue
 
             if dashboard_owner_ids.issubset(slice_owner_ids):
+                logger.debug(
+                    "Slice %s already has all dashboard owners, skipping sync",
+                    slice.id,
+                )   
                 continue
 
-            slice.owners = [set(slice.owners) | set(self.owners)]
+            slice.owners = list(set(slice.owners) | set(self.owners))
+            logger.debug(
+                "Updated slice %s owners to include dashboard owners: %s",
+                slice.id,
+                [owner.id for owner in slice.owners],
+            )
 
         db.session.commit()
 
