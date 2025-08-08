@@ -260,7 +260,6 @@ def test_sync_with_malformed_json_metadata() -> None:
         dashboard.sync_dashboard_chart_owners()
 
 
-# @patch('superset.models.dashboard.db.session')
 def test_sync_commits_changes_to_database(mocker) -> None:
     """
     Test that sync changes are committed to the database

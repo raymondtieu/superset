@@ -497,7 +497,7 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
             if dashboard_owner_ids.issubset(slice_owner_ids):
                 continue
 
-            slice.owners = set(slice.owners) | set(self.owners)
+            slice.owners = [set(slice.owners) | set(self.owners)]
 
         db.session.commit()
 
