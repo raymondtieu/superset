@@ -72,3 +72,8 @@ class TestSyncDashboardChartOwners(SupersetTestCase):
                 chart_owner,
                 new_dashboard_owner
             }
+
+            # Clean up
+            db.session.delete(dashboard)
+            db.session.delete(chart)
+            db.session.commit()
