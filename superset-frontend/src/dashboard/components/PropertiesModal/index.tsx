@@ -52,6 +52,7 @@ import {
 import { applyColors, getColorNamespace } from 'src/utils/colorScheme';
 import { getOwnerDisplayName } from 'src/utils/getOwnerName';
 import Owner from 'src/types/Owner';
+import Checkbox from 'src/components/Checkbox';
 
 const StyledFormItem = styled(FormItem)`
   margin-bottom: 0;
@@ -508,6 +509,33 @@ const PropertiesModal = ({
     );
   };
 
+  const getSyncChartsCheckbox = () => {
+    const jsonMetadataObj = getJsonMetadata();
+    const hasSyncChartsEnabled =
+      jsonMetadataObj?.auto_sync_chart_owners || false;
+
+    return (
+      <>
+        <Checkbox
+          checked={hasSyncChartsEnabled}
+          onChange={e => {
+            const jsonMetadataObj = getJsonMetadata();
+            jsonMetadataObj.auto_sync_chart_owners = e;
+            setJsonMetadata(jsonStringify(jsonMetadataObj));
+          }}
+          style={{ marginRight: '8px' }}
+        />
+        <span>{t('Sync chart owners')}</span>
+
+        <p className="help-block">
+          {t(
+            'Update owners of all charts in this dashboard to include dashboard owners.',
+          )}
+        </p>
+      </>
+    );
+  };
+
   useEffect(() => {
     if (show) {
       if (!currentDashboardInfo) {
@@ -630,9 +658,12 @@ const PropertiesModal = ({
             </p>
           </Col>
         </Row>
-        {isFeatureEnabled(FeatureFlag.DashboardRbac) && canAccessRoles
-          ? getRowsWithRoles()
-          : getRowsWithoutRoles()}
+        <>
+          {isFeatureEnabled(FeatureFlag.DashboardRbac) && canAccessRoles
+            ? getRowsWithRoles()
+            : getRowsWithoutRoles()}
+          {getSyncChartsCheckbox()}
+        </>
         <Row>
           <Col xs={24} md={24}>
             <h3>{t('Certification')}</h3>
