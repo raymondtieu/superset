@@ -52,7 +52,7 @@ import {
 import { applyColors, getColorNamespace } from 'src/utils/colorScheme';
 import { getOwnerDisplayName } from 'src/utils/getOwnerName';
 import Owner from 'src/types/Owner';
-import Checkbox from 'src/components/Checkbox';
+import SyncChartOwnersControl from './SyncChartOwnersControl';
 
 const StyledFormItem = styled(FormItem)`
   margin-bottom: 0;
@@ -87,7 +87,7 @@ type DashboardInfo = {
   certificationDetails: string;
   isManagedExternally: boolean;
 };
-type ChartInfo = {
+export type ChartInfo = {
   id: number;
   name: string;
   ownerIds: number[];
@@ -117,7 +117,7 @@ const PropertiesModal = ({
   const saveLabel = onlyApply ? t('Apply') : t('Save');
   const [tags, setTags] = useState<TagType[]>([]);
   const [autoSyncChartsEnabled, setAutoSyncChartsEnabled] = useState(false);
-  const [chartInfo, setChartInfo] = useState<Record<string, any>>({});
+  const [chartInfo, setChartInfo] = useState<Record<number, ChartInfo>>({});
   const categoricalSchemeRegistry = getCategoricalSchemeRegistry();
   const canAccessRoles = userHasPermission(
     user,
@@ -523,27 +523,20 @@ const PropertiesModal = ({
     );
   };
 
-  const getAutoSyncChartsCheckbox = () => (
-    <>
-      <Checkbox
-        checked={autoSyncChartsEnabled}
-        onChange={val => {
-          const nextVal = val ?? false;
-          const jsonMetadataObj = getJsonMetadata();
-          jsonMetadataObj.auto_sync_chart_owners = nextVal;
+  const getAutoSyncChartsControl = () => (
+    <SyncChartOwnersControl
+      autoSyncChartsEnabled={autoSyncChartsEnabled}
+      onChange={(val: boolean): void => {
+        const nextVal = val ?? false;
+        const jsonMetadataObj = getJsonMetadata();
+        jsonMetadataObj.auto_sync_chart_owners = nextVal;
 
-          setAutoSyncChartsEnabled(nextVal);
-          setJsonMetadata(jsonStringify(jsonMetadataObj));
-        }}
-        style={{ marginRight: '8px' }}
-      />
-      <span>{t('Sync chart owners')}</span>
-      <p className="help-block">
-        {t(
-          'Update owners of all charts in this dashboard to include dashboard owners.',
-        )}
-      </p>
-    </>
+        setAutoSyncChartsEnabled(nextVal);
+        setJsonMetadata(jsonStringify(jsonMetadataObj));
+      }}
+      dashboardOwnerIds={owners.map(owner => owner.id)}
+      chartInfoMap={chartInfo}
+    />
   );
 
   const fetchChartInfo = useCallback(() => {
@@ -552,7 +545,7 @@ const PropertiesModal = ({
     })
       .then(response => {
         const charts = response.json.result;
-        const chartInfoMap: Record<string, ChartInfo> = {};
+        const chartInfoMap: Record<number, ChartInfo> = {};
         charts.forEach((chart: any) => {
           chartInfoMap[chart.id] = {
             id: chart.id,
@@ -691,8 +684,7 @@ const PropertiesModal = ({
           {isFeatureEnabled(FeatureFlag.DashboardRbac) && canAccessRoles
             ? getRowsWithRoles()
             : getRowsWithoutRoles()}
-          <p>Auto - sync: {autoSyncChartsEnabled ? 'True' : 'False'}</p>
-          {getAutoSyncChartsCheckbox()}
+          {getAutoSyncChartsControl()}
         </>
         <Row>
           <Col xs={24} md={24}>
