@@ -26,6 +26,7 @@ from marshmallow.validate import Length, Range
 
 from superset import app
 from superset.common.chart_data import ChartDataResultFormat, ChartDataResultType
+from superset.dashboards.schemas import UserSchema
 from superset.db_engine_specs.base import builtin_time_grains
 from superset.utils import pandas_postprocessing, schema as utils
 from superset.utils.core import (
@@ -162,6 +163,7 @@ class ChartEntityResponseSchema(Schema):
     certification_details = fields.String(
         metadata={"description": certification_details_description}
     )
+    owners = fields.List(fields.Nested(UserSchema), metadata={"description": owners_description})
 
 
 class ChartPostSchema(Schema):

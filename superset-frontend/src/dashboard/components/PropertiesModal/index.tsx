@@ -87,6 +87,11 @@ type DashboardInfo = {
   certificationDetails: string;
   isManagedExternally: boolean;
 };
+type ChartInfo = {
+  id: number;
+  name: string;
+  ownerIds: number[];
+};
 
 const PropertiesModal = ({
   addSuccessToast,
@@ -111,6 +116,8 @@ const PropertiesModal = ({
   const [roles, setRoles] = useState<Roles>([]);
   const saveLabel = onlyApply ? t('Apply') : t('Save');
   const [tags, setTags] = useState<TagType[]>([]);
+  const [autoSyncChartsEnabled, setAutoSyncChartsEnabled] = useState(false);
+  const [chartInfo, setChartInfo] = useState<Record<string, any>>({});
   const categoricalSchemeRegistry = getCategoricalSchemeRegistry();
   const canAccessRoles = userHasPermission(
     user,
@@ -229,6 +236,13 @@ const PropertiesModal = ({
       });
 
       setIsLoading(false);
+
+      //  After fetching initial dashboard data
+      setAutoSyncChartsEnabled(
+        jsonMetadataObj?.auto_sync_chart_owners ?? false,
+      );
+
+      fetchChartInfo();
     }, handleErrorResponse);
   }, [dashboardId, handleDashboardData]);
 
@@ -509,32 +523,47 @@ const PropertiesModal = ({
     );
   };
 
-  const getSyncChartsCheckbox = () => {
-    const jsonMetadataObj = getJsonMetadata();
-    const hasSyncChartsEnabled =
-      jsonMetadataObj?.auto_sync_chart_owners || false;
+  const getAutoSyncChartsCheckbox = () => (
+    <>
+      <Checkbox
+        checked={autoSyncChartsEnabled}
+        onChange={val => {
+          const nextVal = val ?? false;
+          const jsonMetadataObj = getJsonMetadata();
+          jsonMetadataObj.auto_sync_chart_owners = nextVal;
 
-    return (
-      <>
-        <Checkbox
-          checked={hasSyncChartsEnabled}
-          onChange={e => {
-            const jsonMetadataObj = getJsonMetadata();
-            jsonMetadataObj.auto_sync_chart_owners = e;
-            setJsonMetadata(jsonStringify(jsonMetadataObj));
-          }}
-          style={{ marginRight: '8px' }}
-        />
-        <span>{t('Sync chart owners')}</span>
+          setAutoSyncChartsEnabled(nextVal);
+          setJsonMetadata(jsonStringify(jsonMetadataObj));
+        }}
+        style={{ marginRight: '8px' }}
+      />
+      <span>{t('Sync chart owners')}</span>
+      <p className="help-block">
+        {t(
+          'Update owners of all charts in this dashboard to include dashboard owners.',
+        )}
+      </p>
+    </>
+  );
 
-        <p className="help-block">
-          {t(
-            'Update owners of all charts in this dashboard to include dashboard owners.',
-          )}
-        </p>
-      </>
-    );
-  };
+  const fetchChartInfo = useCallback(() => {
+    SupersetClient.get({
+      endpoint: `/api/v1/dashboard/${dashboardId}/charts`,
+    })
+      .then(response => {
+        const charts = response.json.result;
+        const chartInfoMap: Record<string, ChartInfo> = {};
+        charts.forEach((chart: any) => {
+          chartInfoMap[chart.id] = {
+            id: chart.id,
+            name: chart.slice_name,
+            ownerIds: chart.owners.map((owner: any) => owner.id),
+          };
+        });
+        setChartInfo(chartInfoMap);
+      })
+      .catch(handleErrorResponse);
+  }, [dashboardId, handleErrorResponse]);
 
   useEffect(() => {
     if (show) {
@@ -662,7 +691,8 @@ const PropertiesModal = ({
           {isFeatureEnabled(FeatureFlag.DashboardRbac) && canAccessRoles
             ? getRowsWithRoles()
             : getRowsWithoutRoles()}
-          {getSyncChartsCheckbox()}
+          <p>Auto - sync: {autoSyncChartsEnabled ? 'True' : 'False'}</p>
+          {getAutoSyncChartsCheckbox()}
         </>
         <Row>
           <Col xs={24} md={24}>
