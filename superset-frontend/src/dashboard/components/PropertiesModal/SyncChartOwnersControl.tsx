@@ -18,6 +18,8 @@
  */
 import Checkbox from 'src/components/Checkbox';
 import { t } from '@superset-ui/core';
+import { useMemo } from 'react';
+import WarningIconWithTooltip from 'src/components/WarningIconWithTooltip';
 import { ChartInfo } from '.';
 
 type SyncChartOwnersControlProps = {
@@ -32,20 +34,61 @@ const SyncChartOwnersControl = ({
   onChange,
   dashboardOwnerIds,
   chartInfoMap,
-}: SyncChartOwnersControlProps) => (
-  <>
-    <Checkbox
-      checked={autoSyncChartsEnabled}
-      onChange={onChange}
-      style={{ marginRight: '8px' }}
-    />
-    <span>{t('Sync chart owners')}</span>
-    <p className="help-block">
-      {t(
-        'Update owners of all charts in this dashboard to include dashboard owners.',
-      )}
-    </p>
-  </>
-);
+}: SyncChartOwnersControlProps) => {
+  const dashboardOwnerIdsSet = useMemo(
+    () => new Set(dashboardOwnerIds),
+    [dashboardOwnerIds],
+  );
 
+  const tooltipText = useMemo(() => {
+    const unsupportedChartNames = Object.values(chartInfoMap)
+      .filter(chartInfo => {
+        const chartOwnerSet = new Set(chartInfo.ownerIds);
+        return chartOwnerSet.intersection(dashboardOwnerIdsSet).size === 0;
+      })
+      .map(chartInfo => chartInfo.name)
+      .sort((a, b) => a.localeCompare(b));
+
+    if (unsupportedChartNames.length === 0) {
+      return '';
+    }
+
+    let chartsToShow = unsupportedChartNames;
+
+    if (unsupportedChartNames.length > 3) {
+      chartsToShow = chartsToShow.slice(0, 3);
+      const remainingCount = unsupportedChartNames.length - 3;
+      chartsToShow.push(
+        `and ${remainingCount === 1 ? '1 other' : `${remainingCount} others`}`,
+      );
+    }
+
+    return `You do not have permission to update the owners of the following charts: ${chartsToShow.join(
+      ', ',
+    )}`;
+  }, [chartInfoMap, dashboardOwnerIdsSet]);
+
+  const showTooltip = autoSyncChartsEnabled && tooltipText.length > 0;
+
+  return (
+    <>
+      <Checkbox
+        checked={autoSyncChartsEnabled}
+        onChange={onChange}
+        style={{ marginRight: '8px' }}
+      />
+      <span>
+        <span style={{ marginRight: '4px' }}>{t('Sync chart owners')}</span>
+        {showTooltip && (
+          <WarningIconWithTooltip size="s" warningMarkdown={tooltipText} />
+        )}
+      </span>
+      <p className="help-block">
+        {t(
+          'Update owners of all charts in this dashboard to include dashboard owners.',
+        )}
+      </p>
+    </>
+  );
+};
 export default SyncChartOwnersControl;
