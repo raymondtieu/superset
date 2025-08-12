@@ -63,7 +63,7 @@ const SyncChartOwnersControl = ({
       );
     }
 
-    return `You do not have permission to update the owners of the following charts: ${chartsToShow.join(
+    return `You do not have permission to update the following charts: ${chartsToShow.join(
       ', ',
     )}`;
   }, [chartInfoMap, dashboardOwnerIdsSet]);
@@ -78,16 +78,13 @@ const SyncChartOwnersControl = ({
         style={{ marginRight: '8px' }}
       />
       <span>
-        <span style={{ marginRight: '4px' }}>{t('Sync chart owners')}</span>
+        <span style={{ marginRight: '4px' }}>
+          {t('Add dashboard owners to all charts.')}
+        </span>
         {showTooltip && (
           <WarningIconWithTooltip size="s" warningMarkdown={tooltipText} />
         )}
       </span>
-      <p className="help-block">
-        {t(
-          'Update owners of all charts in this dashboard to include dashboard owners.',
-        )}
-      </p>
     </>
   );
 };

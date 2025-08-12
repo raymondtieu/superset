@@ -530,8 +530,6 @@ const PropertiesModal = ({
         const nextVal = val ?? false;
         const jsonMetadataObj = getJsonMetadata();
         jsonMetadataObj.auto_sync_chart_owners = nextVal;
-
-        setAutoSyncChartsEnabled(nextVal);
         setJsonMetadata(jsonStringify(jsonMetadataObj));
       }}
       dashboardOwnerIds={owners.map(owner => owner.id)}
@@ -601,7 +599,7 @@ const PropertiesModal = ({
     } catch (error) {
       handleErrorResponse(error);
     }
-  }, [dashboardId]);
+  }, [addDangerToast, dashboardId]);
 
   const handleChangeTags = (tags: { label: string; value: number }[]) => {
     const parsedTags: TagType[] = ensureIsArray(tags).map(r => ({
@@ -610,6 +608,13 @@ const PropertiesModal = ({
     }));
     setTags(parsedTags);
   };
+
+  useEffect(() => {
+    // Initialize auto-sync charts setting from JSON metadata
+    setAutoSyncChartsEnabled(
+      getJsonMetadata()?.auto_sync_chart_owners === true,
+    );
+  }, [getJsonMetadata]);
 
   return (
     <Modal
