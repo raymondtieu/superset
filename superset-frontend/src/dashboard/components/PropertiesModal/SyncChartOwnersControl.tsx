@@ -20,9 +20,9 @@ import Checkbox from 'src/components/Checkbox';
 import { t } from '@superset-ui/core';
 import { useMemo } from 'react';
 import WarningIconWithTooltip from 'src/components/WarningIconWithTooltip';
-import { ChartInfo } from '.';
+import { ChartInfo } from 'src/dashboard/components/PropertiesModal';
 
-type SyncChartOwnersControlProps = {
+export type SyncChartOwnersControlProps = {
   autoSyncChartsEnabled: boolean;
   onChange: (value: boolean) => void;
   dashboardOwnerIds: number[];
@@ -73,16 +73,24 @@ const SyncChartOwnersControl = ({
   return (
     <>
       <Checkbox
+        aria-checked={autoSyncChartsEnabled}
+        aria-labelledby="sync-chart-owners-control"
         checked={autoSyncChartsEnabled}
         onChange={onChange}
         style={{ marginRight: '8px' }}
       />
       <span>
-        <span style={{ marginRight: '4px' }}>
+        <span
+          aria-label={t('Add dashboard owners to all charts.')}
+          id="sync-chart-owners-control"
+          style={{ marginRight: '4px' }}
+        >
           {t('Add dashboard owners to all charts.')}
         </span>
         {showTooltip && (
-          <WarningIconWithTooltip size="s" warningMarkdown={tooltipText} />
+          <span aria-label={tooltipText}>
+            <WarningIconWithTooltip size="s" warningMarkdown={tooltipText} />
+          </span>
         )}
       </span>
     </>

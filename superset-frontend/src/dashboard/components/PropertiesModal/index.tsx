@@ -52,7 +52,7 @@ import {
 import { applyColors, getColorNamespace } from 'src/utils/colorScheme';
 import { getOwnerDisplayName } from 'src/utils/getOwnerName';
 import Owner from 'src/types/Owner';
-import SyncChartOwnersControl from './SyncChartOwnersControl';
+import SyncChartOwnersControl from 'src/dashboard/components/PropertiesModal/SyncChartOwnersControl';
 
 const StyledFormItem = styled(FormItem)`
   margin-bottom: 0;
