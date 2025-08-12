@@ -16,6 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+// @ts-ignore
+// eslint-disable-next-line import/no-unresolved
+import { pinterestRoutes } from '@pinterest-plugins/src/views/routes';
 import { FeatureFlag, isFeatureEnabled } from '@superset-ui/core';
 import { lazy, ComponentType, ComponentProps } from 'react';
 
@@ -237,6 +240,8 @@ if (isFeatureEnabled(FeatureFlag.TaggingSystem)) {
     Component: Tags,
   });
 }
+
+routes.push(...pinterestRoutes);
 
 const frontEndRoutes: Record<string, boolean> = routes
   .map(r => r.path)

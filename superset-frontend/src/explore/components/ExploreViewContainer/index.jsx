@@ -21,6 +21,9 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+// @ts-ignore
+// eslint-disable-next-line import/no-unresolved
+import { showMinimalChartView } from '@pinterest-plugins/src/utils';
 import {
   styled,
   t,
@@ -248,6 +251,7 @@ function setSidebarWidths(key, dimension) {
 }
 
 function ExploreViewContainer(props) {
+  const minimalChartMode = showMinimalChartView();
   const dynamicPluginContext = usePluginContext();
   const dynamicPlugin = dynamicPluginContext.dynamicPlugins[props.vizType];
   const isDynamicPluginLoading = dynamicPlugin && dynamicPlugin.mounting;
@@ -568,24 +572,26 @@ function ExploreViewContainer(props) {
 
   return (
     <ExploreContainer>
-      <ConnectedExploreChartHeader
-        actions={props.actions}
-        canOverwrite={props.can_overwrite}
-        canDownload={props.can_download}
-        dashboardId={props.dashboardId}
-        colorScheme={props.dashboardColorScheme}
-        isStarred={props.isStarred}
-        slice={props.slice}
-        sliceName={props.sliceName}
-        table_name={props.table_name}
-        formData={props.form_data}
-        chart={props.chart}
-        ownState={props.ownState}
-        user={props.user}
-        reports={props.reports}
-        saveDisabled={errorMessage || props.chart.chartStatus === 'loading'}
-        metadata={props.metadata}
-      />
+      {!minimalChartMode && (
+        <ConnectedExploreChartHeader
+          actions={props.actions}
+          canOverwrite={props.can_overwrite}
+          canDownload={props.can_download}
+          dashboardId={props.dashboardId}
+          colorScheme={props.dashboardColorScheme}
+          isStarred={props.isStarred}
+          slice={props.slice}
+          sliceName={props.sliceName}
+          table_name={props.table_name}
+          formData={props.form_data}
+          chart={props.chart}
+          ownState={props.ownState}
+          user={props.user}
+          reports={props.reports}
+          saveDisabled={errorMessage || props.chart.chartStatus === 'loading'}
+          metadata={props.metadata}
+        />
+      )}
       <ExplorePanelContainer id="explore-container">
         <Global
           styles={css`
@@ -611,46 +617,48 @@ function ExploreViewContainer(props) {
             }
           `}
         />
-        <Resizable
-          onResizeStop={(evt, direction, ref, d) => {
-            setWidth(ref.getBoundingClientRect().width);
-            setSidebarWidths(LocalStorageKeys.DatasourceWidth, d);
-          }}
-          defaultSize={{
-            width: getSidebarWidths(LocalStorageKeys.DatasourceWidth),
-            height: '100%',
-          }}
-          minWidth={defaultSidebarsWidth[LocalStorageKeys.DatasourceWidth]}
-          maxWidth="33%"
-          enable={{ right: true }}
-          className={
-            isCollapsed ? 'no-show' : 'explore-column data-source-selection'
-          }
-        >
-          <div className="title-container">
-            <span className="horizontal-text">{t('Chart Source')}</span>
-            <span
-              role="button"
-              tabIndex={0}
-              className="action-button"
-              onClick={toggleCollapse}
-            >
-              <Icons.Expand
-                className="collapse-icon"
-                iconColor={theme.colors.primary.base}
-                iconSize="l"
-              />
-            </span>
-          </div>
-          <DataSourcePanel
-            formData={props.form_data}
-            datasource={props.datasource}
-            controls={props.controls}
-            actions={props.actions}
-            width={width}
-            user={props.user}
-          />
-        </Resizable>
+        {!minimalChartMode && (
+          <Resizable
+            onResizeStop={(evt, direction, ref, d) => {
+              setWidth(ref.getBoundingClientRect().width);
+              setSidebarWidths(LocalStorageKeys.DatasourceWidth, d);
+            }}
+            defaultSize={{
+              width: getSidebarWidths(LocalStorageKeys.DatasourceWidth),
+              height: '100%',
+            }}
+            minWidth={defaultSidebarsWidth[LocalStorageKeys.DatasourceWidth]}
+            maxWidth="33%"
+            enable={{ right: true }}
+            className={
+              isCollapsed ? 'no-show' : 'explore-column data-source-selection'
+            }
+          >
+            <div className="title-container">
+              <span className="horizontal-text">{t('Chart Source')}</span>
+              <span
+                role="button"
+                tabIndex={0}
+                className="action-button"
+                onClick={toggleCollapse}
+              >
+                <Icons.Expand
+                  className="collapse-icon"
+                  iconColor={theme.colors.primary.base}
+                  iconSize="l"
+                />
+              </span>
+            </div>
+            <DataSourcePanel
+              formData={props.form_data}
+              datasource={props.datasource}
+              controls={props.controls}
+              actions={props.actions}
+              width={width}
+              user={props.user}
+            />
+          </Resizable>
+        )}
         {isCollapsed ? (
           <div
             className="sidebar"
