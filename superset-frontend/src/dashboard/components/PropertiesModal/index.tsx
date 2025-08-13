@@ -218,12 +218,12 @@ const PropertiesModal = ({
   );
 
   const fetchChartInfo = useCallback(() => {
+    setHasFetchedCharts(true);
+
     SupersetClient.get({
       endpoint: `/api/v1/dashboard/${dashboardId}/charts`,
     })
       .then(response => {
-        setHasFetchedCharts(true);
-
         const charts = response.json.result;
         const chartInfoMap: Record<number, ChartInfo> = {};
         charts.forEach((chart: any) => {
@@ -559,22 +559,10 @@ const PropertiesModal = ({
       } else {
         handleDashboardData(currentDashboardInfo);
       }
-
-      // Fetch chart info when the modal is shown
-      if (!hasFetchedCharts) {
-        fetchChartInfo();
-      }
     }
 
     JsonEditor.preload();
-  }, [
-    currentDashboardInfo,
-    fetchChartInfo,
-    fetchDashboardDetails,
-    handleDashboardData,
-    hasFetchedCharts,
-    show,
-  ]);
+  }, [currentDashboardInfo, fetchDashboardDetails, handleDashboardData, show]);
 
   useEffect(() => {
     // the title can be changed inline in the dashboard, this catches it
@@ -624,8 +612,16 @@ const PropertiesModal = ({
       ? JSON.parse(jsonMetadata)
       : {};
 
-    setAutoSyncChartsEnabled(jsonMetadataObj.auto_sync_chart_owners === true);
-  }, [jsonMetadata]);
+    const syncCharts = jsonMetadataObj.auto_sync_chart_owners === true;
+
+    setAutoSyncChartsEnabled(syncCharts);
+
+    // Fetch chart info when sync is enabled for the first time
+    if (syncCharts && !hasFetchedCharts) {
+      setHasFetchedCharts(true);
+      fetchChartInfo();
+    }
+  }, [fetchChartInfo, hasFetchedCharts, jsonMetadata]);
 
   return (
     <Modal

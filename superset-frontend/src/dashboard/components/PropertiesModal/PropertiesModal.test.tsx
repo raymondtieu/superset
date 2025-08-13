@@ -32,6 +32,8 @@ const spyColorSchemeControlWrapper = jest.spyOn(
 const mockedJsonMetadata =
   '{"timed_refresh_immune_slices": [], "expanded_slices": {}, "refresh_frequency": 0, "default_filters": "{}", "color_scheme": "supersetColors", "label_colors": {"0": "#D3B3DA", "1": "#9EE5E5", "0. Pre-clinical": "#1FA8C9", "2. Phase II or Combined I/II": "#454E7C", "1. Phase I": "#5AC189", "3. Phase III": "#FF7F44", "4. Authorized": "#666666", "root": "#1FA8C9", "Protein subunit": "#454E7C", "Phase II": "#5AC189", "Pre-clinical": "#FF7F44", "Phase III": "#666666", "Phase I": "#E04355", "Phase I/II": "#FCC700", "Inactivated virus": "#A868B7", "Virus-like particle": "#3CCCCB", "Replicating bacterial vector": "#A38F79", "DNA-based": "#8FD3E4", "RNA-based vaccine": "#A1A6BD", "Authorized": "#ACE1C4", "Non-replicating viral vector": "#FEC0A1", "Replicating viral vector": "#B2B2B2", "Unknown": "#EFA1AA", "Live attenuated virus": "#FDE380", "COUNT(*)": "#D1C6BC"}, "filter_scopes": {"358": {"Country_Name": {"scope": ["ROOT_ID"], "immune": []}, "Product_Category": {"scope": ["ROOT_ID"], "immune": []}, "Clinical Stage": {"scope": ["ROOT_ID"], "immune": []}}}}';
 
+const mockChartsEndpoint = 'http://localhost/api/v1/dashboard/26/charts';
+
 spyColorSchemeControlWrapper.mockImplementation(
   () => (<div>ColorSchemeControlWrapper</div>) as any,
 );
@@ -93,7 +95,7 @@ fetchMock.get(
   },
 );
 
-fetchMock.get('http://localhost/api/v1/dashboard/26/charts', {
+fetchMock.get(mockChartsEndpoint, {
   body: {
     result: [
       {
@@ -570,131 +572,224 @@ test('should not show roles without dashboard rbac editor permissions', async ()
   expect(screen.queryByText('Roles')).not.toBeInTheDocument();
 });
 
-test('auto sync chart owners should be checked if true in metadata', async () => {
-  spyIsFeatureEnabled.mockReturnValue(true);
-
-  const props = createProps();
-  const propsWithDashboardInfo = {
-    ...props,
-    dashboardInfo: {
-      ...dashboardInfo,
-      metadata: { auto_sync_chart_owners: true },
-    },
-  };
-
-  render(<PropertiesModal {...propsWithDashboardInfo} />, {
-    useRedux: true,
+describe('sync chart owners', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  // Wait for API call to complete
-  await waitFor(() => {
-    expect(
-      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
-    ).toBe(true);
+  afterEach(() => {
+    fetchMock.resetHistory();
   });
 
-  const checkbox = await within(
-    screen.getByTestId('sync-chart-owners-control'),
-  ).findByRole('checkbox');
+  it('should be checked if enabled in metadata', async () => {
+    spyIsFeatureEnabled.mockReturnValue(true);
 
-  expect(checkbox).toBeChecked();
+    const props = createProps();
+    const propsWithDashboardInfo = {
+      ...props,
+      dashboardInfo: {
+        ...dashboardInfo,
+        metadata: { auto_sync_chart_owners: true },
+      },
+    };
 
-  const tooltip = within(
-    screen.getByTestId('sync-chart-owners-control'),
-  ).getByLabelText(
-    'You do not have permission to update the following charts',
-    { exact: false },
-  );
+    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+      useRedux: true,
+    });
 
-  expect(tooltip).toBeInTheDocument();
-});
+    // Wait for API call to complete
+    await waitFor(() => {
+      expect(fetchMock.called(mockChartsEndpoint)).toBe(true);
+    });
 
-test('auto sync chart owners should not be checked if false in metadata', async () => {
-  spyIsFeatureEnabled.mockReturnValue(true);
+    const checkbox = await within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
 
-  const props = createProps();
-  const propsWithDashboardInfo = {
-    ...props,
-    dashboardInfo: {
-      ...dashboardInfo,
-      metadata: { auto_sync_chart_owners: false },
-    },
-  };
+    expect(checkbox).toBeChecked();
 
-  render(<PropertiesModal {...propsWithDashboardInfo} />, {
-    useRedux: true,
+    const tooltip = within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).getByLabelText(
+      'You do not have permission to update the following charts',
+      { exact: false },
+    );
+
+    expect(tooltip).toBeInTheDocument();
   });
 
-  // Wait for API call to complete
-  await waitFor(() => {
-    expect(
-      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
-    ).toBe(true);
+  it('should not be checked if disabled in metadata', async () => {
+    spyIsFeatureEnabled.mockReturnValue(true);
+
+    const props = createProps();
+    const propsWithDashboardInfo = {
+      ...props,
+      dashboardInfo: {
+        ...dashboardInfo,
+        metadata: { auto_sync_chart_owners: false },
+      },
+    };
+
+    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+      useRedux: true,
+    });
+
+    const checkbox = await within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
+
+    // Wait for the checkbox to have its final state (not checked)
+    await waitFor(() => {
+      expect(checkbox).not.toBeChecked();
+    });
+
+    // Ensure the API call was not made
+    expect(fetchMock.called(mockChartsEndpoint)).toBe(false);
+
+    const tooltip = within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).queryByLabelText(
+      'You do not have permission to update the following charts',
+      { exact: false },
+    );
+
+    expect(tooltip).not.toBeInTheDocument();
   });
 
-  const checkbox = await within(
-    screen.getByTestId('sync-chart-owners-control'),
-  ).findByRole('checkbox');
+  it('should not be checked if metadata is empty', async () => {
+    spyIsFeatureEnabled.mockReturnValue(true);
 
-  expect(checkbox).not.toBeChecked();
-});
+    const props = createProps();
+    const propsWithDashboardInfo = {
+      ...props,
+      dashboardInfo: {
+        ...dashboardInfo,
+        metadata: '{}',
+      },
+    };
 
-test('auto sync chart owners should not be checked if metadata is empty', async () => {
-  spyIsFeatureEnabled.mockReturnValue(true);
+    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+      useRedux: true,
+    });
 
-  const props = createProps();
-  const propsWithDashboardInfo = {
-    ...props,
-    dashboardInfo: {
-      ...dashboardInfo,
-      metadata: '{}',
-    },
-  };
+    const checkbox = await within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
 
-  render(<PropertiesModal {...propsWithDashboardInfo} />, {
-    useRedux: true,
+    // Wait for the checkbox to have its final state (not checked)
+    await waitFor(() => {
+      expect(checkbox).not.toBeChecked();
+    });
+
+    // Ensure the API call was not made
+    expect(fetchMock.called(mockChartsEndpoint)).toBe(false);
   });
 
-  // Wait for API call to complete
-  await waitFor(() => {
-    expect(
-      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
-    ).toBe(true);
+  it('should not be checked if value is not a boolean in metadata', async () => {
+    spyIsFeatureEnabled.mockReturnValue(true);
+
+    const props = createProps();
+    const propsWithDashboardInfo = {
+      ...props,
+      dashboardInfo: {
+        ...dashboardInfo,
+        metadata: { auto_sync_chart_owners: 'test' },
+      },
+    };
+
+    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+      useRedux: true,
+    });
+
+    const checkbox = await within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
+
+    // Wait for the checkbox to have its final state (not checked)
+    await waitFor(() => {
+      expect(checkbox).not.toBeChecked();
+    });
+
+    // Ensure the API call was not made
+    expect(fetchMock.called(mockChartsEndpoint)).toBe(false);
   });
 
-  const checkbox = await within(
-    screen.getByTestId('sync-chart-owners-control'),
-  ).findByRole('checkbox');
+  it('should defer charts API call until checkbox is clicked', async () => {
+    spyIsFeatureEnabled.mockReturnValue(true);
 
-  expect(checkbox).not.toBeChecked();
-});
+    const props = createProps();
+    const propsWithDashboardInfo = {
+      ...props,
+      dashboardInfo: {
+        ...dashboardInfo,
+        metadata: { auto_sync_chart_owners: false },
+      },
+    };
 
-test('auto sync chart owners should not be checked if not a boolean in metadata', async () => {
-  spyIsFeatureEnabled.mockReturnValue(true);
+    fetchMock.resetHistory();
+    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+      useRedux: true,
+    });
 
-  const props = createProps();
-  const propsWithDashboardInfo = {
-    ...props,
-    dashboardInfo: {
-      ...dashboardInfo,
-      metadata: { auto_sync_chart_owners: 'test' },
-    },
-  };
+    const checkbox = await within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
 
-  render(<PropertiesModal {...propsWithDashboardInfo} />, {
-    useRedux: true,
+    // Wait for the checkbox to have its final state (not checked)
+    await waitFor(() => {
+      expect(checkbox).not.toBeChecked();
+    });
+
+    // Ensure the API call was not made
+    expect(fetchMock.called(mockChartsEndpoint)).toBe(false);
+
+    let tooltip = within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).queryByLabelText(
+      'You do not have permission to update the following charts',
+      { exact: false },
+    );
+
+    expect(tooltip).not.toBeInTheDocument();
+
+    userEvent.click(checkbox);
+
+    // Wait for API call to complete
+    await waitFor(() => {
+      expect(checkbox).toBeChecked();
+      expect(fetchMock.calls(mockChartsEndpoint).length).toBe(1);
+
+      tooltip = within(
+        screen.getByTestId('sync-chart-owners-control'),
+      ).queryByLabelText(
+        'You do not have permission to update the following charts',
+        { exact: false },
+      );
+
+      expect(tooltip).toBeInTheDocument();
+    });
+
+    userEvent.click(checkbox);
+
+    await waitFor(() => {
+      expect(checkbox).not.toBeChecked();
+      expect(fetchMock.calls(mockChartsEndpoint).length).toBe(1);
+
+      tooltip = within(
+        screen.getByTestId('sync-chart-owners-control'),
+      ).queryByLabelText(
+        'You do not have permission to update the following charts',
+        { exact: false },
+      );
+
+      expect(tooltip).not.toBeInTheDocument();
+    });
+
+    userEvent.click(checkbox);
+
+    await waitFor(() => {
+      expect(checkbox).toBeChecked();
+      expect(fetchMock.calls(mockChartsEndpoint).length).toBe(1);
+    });
   });
-
-  // Wait for API call to complete
-  await waitFor(() => {
-    expect(
-      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
-    ).toBe(true);
-  });
-
-  const checkbox = await within(
-    screen.getByTestId('sync-chart-owners-control'),
-  ).findByRole('checkbox');
-
-  expect(checkbox).not.toBeChecked();
 });

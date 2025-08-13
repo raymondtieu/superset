@@ -75,7 +75,7 @@ describe('SyncChartOwnersControl', () => {
     expect(tooltip).toBeInTheDocument();
   });
 
-  it('unsupported chart list gets truncated singular', async () => {
+  it('truncates unsupported chart list to 1 singular', async () => {
     const rendered = render(setup({ dashboardOwnerIds: [1] }));
 
     const tooltip = await rendered.findByLabelText(
@@ -85,7 +85,7 @@ describe('SyncChartOwnersControl', () => {
     expect(tooltip).toBeInTheDocument();
   });
 
-  it('unsupported chart list gets truncated plural', async () => {
+  it('truncates unsupported chart list to 2 plural', async () => {
     const rendered = render(setup({ dashboardOwnerIds: [] }));
 
     const tooltip = await rendered.findByLabelText(
@@ -95,7 +95,7 @@ describe('SyncChartOwnersControl', () => {
     expect(tooltip).toBeInTheDocument();
   });
 
-  it('does not show tooltip when no unsupported charts', () => {
+  it('does not show tooltip when there are no unsupported charts', () => {
     const rendered = render(
       setup({
         dashboardOwnerIds: [1, 2, 3, 4, 5],
