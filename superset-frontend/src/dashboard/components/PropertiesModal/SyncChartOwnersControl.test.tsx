@@ -17,13 +17,15 @@
  * under the License.
  */
 import { render } from 'spec/helpers/testing-library';
+import userEvent from '@testing-library/user-event';
+import { within } from '@testing-library/react';
 
 import SyncChartOwnersControl, {
   SyncChartOwnersControlProps,
 } from 'src/dashboard/components/PropertiesModal/SyncChartOwnersControl';
 
 const props: SyncChartOwnersControlProps = {
-  autoSyncChartsEnabled: false,
+  autoSyncChartsEnabled: true,
   onChange: jest.fn(),
   dashboardOwnerIds: [1, 2, 3],
   chartInfoMap: {
@@ -43,7 +45,9 @@ describe('SyncChartOwnersControl', () => {
   it('renders a checkbox', async () => {
     const rendered = render(setup());
 
-    const checkbox = await rendered.findByRole('checkbox');
+    const checkbox = await within(
+      rendered.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
     const label = rendered.getByText('Add dashboard owners to all charts.');
 
     expect(checkbox).toBeInTheDocument();
@@ -52,15 +56,17 @@ describe('SyncChartOwnersControl', () => {
 
   it('calls onChange when checkbox is clicked', async () => {
     const onChange = jest.fn();
-    const rendered = render(setup({ onChange }));
-    const checkbox = await rendered.findByRole('checkbox');
+    const rendered = render(setup({ autoSyncChartsEnabled: false, onChange }));
 
-    checkbox?.click();
+    const checkbox = await within(
+      rendered.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
+    await userEvent.click(checkbox);
     expect(onChange).toHaveBeenCalledWith(true);
   });
 
   it('shows a tooltip for unsupported charts', async () => {
-    const rendered = render(setup({ autoSyncChartsEnabled: true }));
+    const rendered = render(setup());
 
     const tooltip = await rendered.findByLabelText(
       'You do not have permission to update the following charts: Chart 4, Chart 5',
@@ -70,9 +76,7 @@ describe('SyncChartOwnersControl', () => {
   });
 
   it('unsupported chart list gets truncated singular', async () => {
-    const rendered = render(
-      setup({ autoSyncChartsEnabled: true, dashboardOwnerIds: [1] }),
-    );
+    const rendered = render(setup({ dashboardOwnerIds: [1] }));
 
     const tooltip = await rendered.findByLabelText(
       'You do not have permission to update the following charts: Chart 2, Chart 3, Chart 4, and 1 other',
@@ -82,9 +86,7 @@ describe('SyncChartOwnersControl', () => {
   });
 
   it('unsupported chart list gets truncated plural', async () => {
-    const rendered = render(
-      setup({ autoSyncChartsEnabled: true, dashboardOwnerIds: [] }),
-    );
+    const rendered = render(setup({ dashboardOwnerIds: [] }));
 
     const tooltip = await rendered.findByLabelText(
       'You do not have permission to update the following charts: Chart 1, Chart 2, Chart 3, and 2 others',
@@ -96,10 +98,19 @@ describe('SyncChartOwnersControl', () => {
   it('does not show tooltip when no unsupported charts', () => {
     const rendered = render(
       setup({
-        autoSyncChartsEnabled: true,
         dashboardOwnerIds: [1, 2, 3, 4, 5],
       }),
     );
+
+    const tooltip = rendered.queryByLabelText(
+      'You do not have permission to update the following charts:',
+      { selector: 'span' },
+    );
+    expect(tooltip).not.toBeInTheDocument();
+  });
+
+  it('does not show tooltip when autoSyncChartsEnabled is false', () => {
+    const rendered = render(setup({ autoSyncChartsEnabled: false }));
 
     const tooltip = rendered.queryByLabelText(
       'You do not have permission to update the following charts:',

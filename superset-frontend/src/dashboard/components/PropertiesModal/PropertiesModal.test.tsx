@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { render, screen, waitFor } from 'spec/helpers/testing-library';
+import { render, screen, waitFor, within } from 'spec/helpers/testing-library';
 import fetchMock from 'fetch-mock';
 import userEvent from '@testing-library/user-event';
 import * as ColorSchemeControlWrapper from 'src/dashboard/components/ColorSchemeControlWrapper';
@@ -93,6 +93,62 @@ fetchMock.get(
   },
 );
 
+fetchMock.get('http://localhost/api/v1/dashboard/26/charts', {
+  body: {
+    result: [
+      {
+        id: 369,
+        slice_name: 'Vaccine Candidates per Country',
+        slice_name_override: 'Map of Vaccine Candidates',
+        owners: [
+          {
+            id: 369,
+            first_name: 'foo',
+            last_name: 'bar',
+            username: 'foobar',
+          },
+        ],
+      },
+      {
+        id: 314,
+        slice_name: 'Vaccine Candidates per Country',
+        slice_name_override: 'Map of Vaccine Candidates',
+      },
+      {
+        id: 351,
+        slice_name: 'Vaccine Candidates per Phase',
+        slice_name_override: 'Vaccine Candidates per Phase',
+      },
+      {
+        id: 312,
+        slice_name: 'Vaccine Candidates per Phase',
+        slice_name_override: 'Vaccine Candidates per Phase',
+      },
+      {
+        id: 325,
+        slice_name: 'Vaccine Candidates per Country & Stage',
+        slice_name_override: 'Heatmap of Countries & Clinical Stages',
+      },
+      {
+        id: 358,
+        slice_name: 'Filtering Vaccines',
+        slice_name_override: 'Filter Box of Vaccines',
+      },
+      {
+        id: 371,
+
+        slice_name: 'Vaccine Candidates per Country & Stage',
+        slice_name_override: 'Sunburst of Country & Clinical Stages',
+      },
+      {
+        id: 364,
+        slice_name: 'Vaccine Candidates per Approach & Stage',
+        slice_name_override: 'Heatmap of Approaches & Clinical Stages',
+      },
+    ],
+  },
+});
+
 const dashboardInfo = {
   certified_by: 'John Doe',
   certification_details: 'Sample certification',
@@ -112,7 +168,7 @@ const dashboardInfo = {
   css: '',
   dashboard_title: 'COVID Vaccine Dashboard',
   id: 26,
-  metadata: mockedJsonMetadata,
+  metadata: JSON.parse(mockedJsonMetadata),
   owners: [],
   position_json:
     '{"CHART-63bEuxjDMJ": {"children": [], "id": "CHART-63bEuxjDMJ", "meta": {"chartId": 369, "height": 76, "sliceName": "Vaccine Candidates per Country", "sliceNameOverride": "Map of Vaccine Candidates", "uuid": "ddc91df6-fb40-4826-bdca-16b85af1c024", "width": 7}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-zvw7luvEL"], "type": "CHART"}, "CHART-F-fkth0Dnv": {"children": [], "id": "CHART-F-fkth0Dnv", "meta": {"chartId": 314, "height": 76, "sliceName": "Vaccine Candidates per Country", "sliceNameOverride": "Treemap of Vaccine Candidates per Country", "uuid": "e2f5a8a7-feb0-4f79-bc6b-01fe55b98b3c", "width": 5}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-zvw7luvEL"], "type": "CHART"}, "CHART-RjD_ygqtwH": {"children": [], "id": "CHART-RjD_ygqtwH", "meta": {"chartId": 351, "height": 59, "sliceName": "Vaccine Candidates per Phase", "sliceNameOverride": "Vaccine Candidates per Phase", "uuid": "30b73c65-85e7-455f-bb24-801bb0cdc670", "width": 2}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-xSeNAspgw"], "type": "CHART"}, "CHART-aGfmWtliqA": {"children": [], "id": "CHART-aGfmWtliqA", "meta": {"chartId": 312, "height": 59, "sliceName": "Vaccine Candidates per Phase", "uuid": "392f293e-0892-4316-bd41-c927b65606a4", "width": 4}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-xSeNAspgw"], "type": "CHART"}, "CHART-dCUpAcPsji": {"children": [], "id": "CHART-dCUpAcPsji", "meta": {"chartId": 325, "height": 82, "sliceName": "Vaccine Candidates per Country & Stage", "sliceNameOverride": "Heatmap of Countries & Clinical Stages", "uuid": "cd111331-d286-4258-9020-c7949a109ed2", "width": 4}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-zhOlQLQnB"], "type": "CHART"}, "CHART-eirDduqb1A": {"children": [], "id": "CHART-eirDduqb1A", "meta": {"chartId": 358, "height": 59, "sliceName": "Filtering Vaccines", "sliceNameOverride": "Filter Box of Vaccines", "uuid": "c29381ce-0e99-4cf3-bf0f-5f55d6b94176", "width": 3}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-xSeNAspgw"], "type": "CHART"}, "CHART-fYo7IyvKZQ": {"children": [], "id": "CHART-fYo7IyvKZQ", "meta": {"chartId": 371, "height": 82, "sliceName": "Vaccine Candidates per Country & Stage", "sliceNameOverride": "Sunburst of Country & Clinical Stages", "uuid": "f69c556f-15fe-4a82-a8bb-69d5b6954123", "width": 5}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-zhOlQLQnB"], "type": "CHART"}, "CHART-j4hUvP5dDD": {"children": [], "id": "CHART-j4hUvP5dDD", "meta": {"chartId": 364, "height": 82, "sliceName": "Vaccine Candidates per Approach & Stage", "sliceNameOverride": "Heatmap of Approaches & Clinical Stages", "uuid": "0c953c84-0c9a-418d-be9f-2894d2a2cee0", "width": 3}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-zhOlQLQnB"], "type": "CHART"}, "DASHBOARD_VERSION_KEY": "v2", "GRID_ID": {"children": [], "id": "GRID_ID", "parents": ["ROOT_ID"], "type": "GRID"}, "HEADER_ID": {"id": "HEADER_ID", "meta": {"text": "COVID Vaccine Dashboard"}, "type": "HEADER"}, "MARKDOWN-VjQQ5SFj5v": {"children": [], "id": "MARKDOWN-VjQQ5SFj5v", "meta": {"code": "# COVID-19 Vaccine Dashboard\\n\\nEverywhere you look, you see negative news about COVID-19. This is to be expected; it\'s been a brutal year and this disease is no joke. This dashboard hopes to use visualization to inject some optimism about the coming return to normalcy we enjoyed before 2020! There\'s lots to be optimistic about:\\n\\n- the sheer volume of attempts to fund the R&D needed to produce and bring an effective vaccine to market\\n- the large number of countries involved in at least one vaccine candidate (and the diversity of economic status of these countries)\\n- the diversity of vaccine approaches taken\\n- the fact that 2 vaccines have already been approved (and a hundreds of thousands of patients have already been vaccinated)\\n\\n### The Dataset\\n\\nThis dashboard is powered by data maintained by the Millken Institute ([link to dataset](https://airtable.com/shrSAi6t5WFwqo3GM/tblEzPQS5fnc0FHYR/viwDBH7b6FjmIBX5x?blocks=bipZFzhJ7wHPv7x9z)). We researched each vaccine candidate and added our own best guesses for the country responsible for each vaccine effort.\\n\\n_Note that this dataset was last updated on 12/23/2020_.\\n\\n", "height": 59, "width": 3}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ", "ROW-xSeNAspgw"], "type": "MARKDOWN"}, "ROOT_ID": {"children": ["TABS-wUKya7eQ0Z"], "id": "ROOT_ID", "type": "ROOT"}, "ROW-xSeNAspgw": {"children": ["MARKDOWN-VjQQ5SFj5v", "CHART-aGfmWtliqA", "CHART-RjD_ygqtwH", "CHART-eirDduqb1A"], "id": "ROW-xSeNAspgw", "meta": {"0": "ROOT_ID", "background": "BACKGROUND_TRANSPARENT"}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ"], "type": "ROW"}, "ROW-zhOlQLQnB": {"children": ["CHART-j4hUvP5dDD", "CHART-dCUpAcPsji", "CHART-fYo7IyvKZQ"], "id": "ROW-zhOlQLQnB", "meta": {"0": "ROOT_ID", "background": "BACKGROUND_TRANSPARENT"}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ"], "type": "ROW"}, "ROW-zvw7luvEL": {"children": ["CHART-63bEuxjDMJ", "CHART-F-fkth0Dnv"], "id": "ROW-zvw7luvEL", "meta": {"0": "ROOT_ID", "background": "BACKGROUND_TRANSPARENT"}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z", "TAB-BCIJF4NvgQ"], "type": "ROW"}, "TAB-BCIJF4NvgQ": {"children": ["ROW-xSeNAspgw", "ROW-zvw7luvEL", "ROW-zhOlQLQnB"], "id": "TAB-BCIJF4NvgQ", "meta": {"text": "Overview"}, "parents": ["ROOT_ID", "TABS-wUKya7eQ0Z"], "type": "TAB"}, "TABS-wUKya7eQ0Z": {"children": ["TAB-BCIJF4NvgQ"], "id": "TABS-wUKya7eQ0Z", "meta": {}, "parents": ["ROOT_ID"], "type": "TABS"}}',
@@ -168,32 +224,52 @@ test('should render - FeatureFlag disabled', async () => {
     await screen.findByTestId('dashboard-edit-properties-form'),
   ).toBeInTheDocument();
 
-  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  const modal = screen.getByRole('dialog', { name: 'Dashboard properties' });
+  expect(modal).toBeInTheDocument();
 
   expect(
-    screen.getByRole('heading', { name: 'Basic information' }),
+    within(modal).getByRole('heading', { name: 'Basic information' }),
   ).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'Access' })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'Colors' })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'Advanced' })).toBeInTheDocument();
   expect(
-    screen.getByRole('heading', { name: 'Certification' }),
+    within(modal).getByRole('heading', { name: 'Access' }),
   ).toBeInTheDocument();
-  expect(screen.getAllByRole('heading')).toHaveLength(5);
+  expect(
+    within(modal).getByRole('heading', { name: 'Colors' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('heading', { name: 'Advanced' }),
+  ).toBeInTheDocument();
 
-  expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-  expect(screen.getAllByRole('button')).toHaveLength(4);
+  expect(
+    within(modal).getByRole('heading', { name: 'Certification' }),
+  ).toBeInTheDocument();
+  expect(within(modal).getAllByRole('heading')).toHaveLength(5);
 
-  expect(screen.getAllByRole('textbox')).toHaveLength(4);
-  expect(screen.getByRole('combobox')).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('button', { name: 'Close' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('button', { name: 'Advanced' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('button', { name: 'Cancel' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('button', { name: 'Save' }),
+  ).toBeInTheDocument();
+  expect(within(modal).getAllByRole('button')).toHaveLength(4);
+
+  expect(within(modal).getAllByRole('textbox')).toHaveLength(4);
+  expect(within(modal).getByRole('combobox')).toBeInTheDocument();
 
   expect(spyColorSchemeControlWrapper).toBeCalledWith(
     expect.objectContaining({ colorScheme: 'supersetColors' }),
     {},
   );
+
+  expect(
+    within(modal).getByTestId('sync-chart-owners-control'),
+  ).toBeInTheDocument();
 });
 
 test('should render - FeatureFlag enabled', async () => {
@@ -206,35 +282,52 @@ test('should render - FeatureFlag enabled', async () => {
     await screen.findByTestId('dashboard-edit-properties-form'),
   ).toBeInTheDocument();
 
-  expect(
-    screen.getByRole('dialog', { name: 'Dashboard properties' }),
-  ).toBeInTheDocument();
+  const modal = screen.getByRole('dialog', { name: 'Dashboard properties' });
+  expect(modal).toBeInTheDocument();
 
   expect(
-    screen.getByRole('heading', { name: 'Basic information' }),
+    within(modal).getByRole('heading', { name: 'Basic information' }),
   ).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'Access' })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'Advanced' })).toBeInTheDocument();
   expect(
-    screen.getByRole('heading', { name: 'Certification' }),
+    within(modal).getByRole('heading', { name: 'Access' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('heading', { name: 'Advanced' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('heading', { name: 'Certification' }),
   ).toBeInTheDocument();
   // Tags will be included since isFeatureFlag always returns true in this test
-  expect(screen.getByRole('heading', { name: 'Tags' })).toBeInTheDocument();
-  expect(screen.getAllByRole('heading')).toHaveLength(5);
+  expect(
+    within(modal).getByRole('heading', { name: 'Tags' }),
+  ).toBeInTheDocument();
+  expect(within(modal).getAllByRole('heading')).toHaveLength(5);
 
-  expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-  expect(screen.getAllByRole('button')).toHaveLength(4);
+  expect(
+    within(modal).getByRole('button', { name: 'Close' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('button', { name: 'Advanced' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('button', { name: 'Cancel' }),
+  ).toBeInTheDocument();
+  expect(
+    within(modal).getByRole('button', { name: 'Save' }),
+  ).toBeInTheDocument();
+  expect(within(modal).getAllByRole('button')).toHaveLength(4);
 
-  expect(screen.getAllByRole('textbox')).toHaveLength(4);
-  expect(screen.getAllByRole('combobox')).toHaveLength(3);
+  expect(within(modal).getAllByRole('textbox')).toHaveLength(4);
+  expect(within(modal).getAllByRole('combobox')).toHaveLength(3);
 
   expect(spyColorSchemeControlWrapper).toBeCalledWith(
     expect.objectContaining({ colorScheme: 'supersetColors' }),
     {},
   );
+
+  expect(
+    within(modal).getByTestId('sync-chart-owners-control'),
+  ).toBeInTheDocument();
 });
 
 test('should open advance', async () => {
@@ -475,4 +568,133 @@ test('should not show roles without dashboard rbac editor permissions', async ()
   });
 
   expect(screen.queryByText('Roles')).not.toBeInTheDocument();
+});
+
+test('auto sync chart owners should be checked if true in metadata', async () => {
+  spyIsFeatureEnabled.mockReturnValue(true);
+
+  const props = createProps();
+  const propsWithDashboardInfo = {
+    ...props,
+    dashboardInfo: {
+      ...dashboardInfo,
+      metadata: { auto_sync_chart_owners: true },
+    },
+  };
+
+  render(<PropertiesModal {...propsWithDashboardInfo} />, {
+    useRedux: true,
+  });
+
+  // Wait for API call to complete
+  await waitFor(() => {
+    expect(
+      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
+    ).toBe(true);
+  });
+
+  const checkbox = await within(
+    screen.getByTestId('sync-chart-owners-control'),
+  ).findByRole('checkbox');
+
+  expect(checkbox).toBeChecked();
+
+  const tooltip = within(
+    screen.getByTestId('sync-chart-owners-control'),
+  ).getByLabelText(
+    'You do not have permission to update the following charts',
+    { exact: false },
+  );
+
+  expect(tooltip).toBeInTheDocument();
+});
+
+test('auto sync chart owners should not be checked if false in metadata', async () => {
+  spyIsFeatureEnabled.mockReturnValue(true);
+
+  const props = createProps();
+  const propsWithDashboardInfo = {
+    ...props,
+    dashboardInfo: {
+      ...dashboardInfo,
+      metadata: { auto_sync_chart_owners: false },
+    },
+  };
+
+  render(<PropertiesModal {...propsWithDashboardInfo} />, {
+    useRedux: true,
+  });
+
+  // Wait for API call to complete
+  await waitFor(() => {
+    expect(
+      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
+    ).toBe(true);
+  });
+
+  const checkbox = await within(
+    screen.getByTestId('sync-chart-owners-control'),
+  ).findByRole('checkbox');
+
+  expect(checkbox).not.toBeChecked();
+});
+
+test('auto sync chart owners should not be checked if metadata is empty', async () => {
+  spyIsFeatureEnabled.mockReturnValue(true);
+
+  const props = createProps();
+  const propsWithDashboardInfo = {
+    ...props,
+    dashboardInfo: {
+      ...dashboardInfo,
+      metadata: '{}',
+    },
+  };
+
+  render(<PropertiesModal {...propsWithDashboardInfo} />, {
+    useRedux: true,
+  });
+
+  // Wait for API call to complete
+  await waitFor(() => {
+    expect(
+      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
+    ).toBe(true);
+  });
+
+  const checkbox = await within(
+    screen.getByTestId('sync-chart-owners-control'),
+  ).findByRole('checkbox');
+
+  expect(checkbox).not.toBeChecked();
+});
+
+test('auto sync chart owners should not be checked if not a boolean in metadata', async () => {
+  spyIsFeatureEnabled.mockReturnValue(true);
+
+  const props = createProps();
+  const propsWithDashboardInfo = {
+    ...props,
+    dashboardInfo: {
+      ...dashboardInfo,
+      metadata: { auto_sync_chart_owners: 'test' },
+    },
+  };
+
+  render(<PropertiesModal {...propsWithDashboardInfo} />, {
+    useRedux: true,
+  });
+
+  // Wait for API call to complete
+  await waitFor(() => {
+    expect(
+      fetchMock.called('http://localhost/api/v1/dashboard/26/charts'),
+    ).toBe(true);
+  });
+
+  const checkbox = await within(
+    screen.getByTestId('sync-chart-owners-control'),
+  ).findByRole('checkbox');
+
+  expect(checkbox).not.toBeChecked();
 });

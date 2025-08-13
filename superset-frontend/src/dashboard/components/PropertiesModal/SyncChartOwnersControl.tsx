@@ -44,7 +44,12 @@ const SyncChartOwnersControl = ({
     const unsupportedChartNames = Object.values(chartInfoMap)
       .filter(chartInfo => {
         const chartOwnerSet = new Set(chartInfo.ownerIds);
-        return chartOwnerSet.intersection(dashboardOwnerIdsSet).size === 0;
+        for (const id of chartOwnerSet) {
+          if (dashboardOwnerIdsSet.has(id)) {
+            return false;
+          }
+        }
+        return true;
       })
       .map(chartInfo => chartInfo.name)
       .sort((a, b) => a.localeCompare(b));
@@ -71,29 +76,29 @@ const SyncChartOwnersControl = ({
   const showTooltip = autoSyncChartsEnabled && tooltipText.length > 0;
 
   return (
-    <>
+    <div data-test="sync-chart-owners-control">
       <Checkbox
         aria-checked={autoSyncChartsEnabled}
-        aria-labelledby="sync-chart-owners-control"
+        // aria-labelledby is not being forwarded to the checkbox component.
+        // data-test selector isn't being rendered by the checkbox span.
+        // Wrap this in a div to find this checkbox in tests.
         checked={autoSyncChartsEnabled}
         onChange={onChange}
         style={{ marginRight: '8px' }}
       />
-      <span>
-        <span
-          aria-label={t('Add dashboard owners to all charts.')}
-          id="sync-chart-owners-control"
-          style={{ marginRight: '4px' }}
-        >
-          {t('Add dashboard owners to all charts.')}
-        </span>
-        {showTooltip && (
-          <span aria-label={tooltipText}>
-            <WarningIconWithTooltip size="s" warningMarkdown={tooltipText} />
-          </span>
-        )}
+      <span
+        aria-label={t('Add dashboard owners to all charts.')}
+        id="sync-chart-owners-control"
+        style={{ marginRight: '4px' }}
+      >
+        {t('Add dashboard owners to all charts.')}
       </span>
-    </>
+      {showTooltip && (
+        <span aria-label={tooltipText}>
+          <WarningIconWithTooltip size="s" warningMarkdown={tooltipText} />
+        </span>
+      )}
+    </div>
   );
 };
 export default SyncChartOwnersControl;

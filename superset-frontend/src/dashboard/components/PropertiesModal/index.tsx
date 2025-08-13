@@ -117,6 +117,7 @@ const PropertiesModal = ({
   const saveLabel = onlyApply ? t('Apply') : t('Save');
   const [tags, setTags] = useState<TagType[]>([]);
   const [autoSyncChartsEnabled, setAutoSyncChartsEnabled] = useState(false);
+  const [hasFetchedCharts, setHasFetchedCharts] = useState(false);
   const [chartInfo, setChartInfo] = useState<Record<number, ChartInfo>>({});
   const categoricalSchemeRegistry = getCategoricalSchemeRegistry();
   const canAccessRoles = userHasPermission(
@@ -131,9 +132,9 @@ const PropertiesModal = ({
       label: tag.name,
     }));
     return selectTags;
-  }, [tags.length]);
+  }, [tags]);
 
-  const handleErrorResponse = async (response: Response) => {
+  const handleErrorResponse = useCallback(async (response: Response) => {
     const { error, statusText, message } = await getClientErrorObject(response);
     let errorText = error || statusText || t('An error has occurred');
     if (typeof message === 'object' && 'json_metadata' in message) {
@@ -151,7 +152,7 @@ const PropertiesModal = ({
       content: errorText,
       okButtonProps: { danger: true, className: 'btn-danger' },
     });
-  };
+  }, []);
 
   const loadAccessOptions = useCallback(
     (accessType = 'owners', input = '', page: number, pageSize: number) => {
@@ -216,6 +217,27 @@ const PropertiesModal = ({
     [form],
   );
 
+  const fetchChartInfo = useCallback(() => {
+    SupersetClient.get({
+      endpoint: `/api/v1/dashboard/${dashboardId}/charts`,
+    })
+      .then(response => {
+        setHasFetchedCharts(true);
+
+        const charts = response.json.result;
+        const chartInfoMap: Record<number, ChartInfo> = {};
+        charts.forEach((chart: any) => {
+          chartInfoMap[chart.id] = {
+            id: chart.id,
+            name: chart.slice_name,
+            ownerIds: (chart.owners ?? []).map((owner: any) => owner.id),
+          };
+        });
+        setChartInfo(chartInfoMap);
+      })
+      .catch(handleErrorResponse);
+  }, [dashboardId, handleErrorResponse]);
+
   const fetchDashboardDetails = useCallback(() => {
     setIsLoading(true);
     // We fetch the dashboard details because not all code
@@ -236,26 +258,20 @@ const PropertiesModal = ({
       });
 
       setIsLoading(false);
-
-      //  After fetching initial dashboard data
-      setAutoSyncChartsEnabled(
-        jsonMetadataObj?.auto_sync_chart_owners ?? false,
-      );
-
-      fetchChartInfo();
     }, handleErrorResponse);
-  }, [dashboardId, handleDashboardData]);
+  }, [dashboardId, handleDashboardData, handleErrorResponse]);
 
-  const getJsonMetadata = () => {
+  const getJsonMetadata = useCallback(() => {
     try {
       const jsonMetadataObj = jsonMetadata?.length
         ? JSON.parse(jsonMetadata)
         : {};
+
       return jsonMetadataObj;
     } catch (_) {
       return {};
     }
-  };
+  }, [jsonMetadata]);
 
   const handleOnChangeOwners = (owners: { value: number; label: string }[]) => {
     const parsedOwners: Owners = ensureIsArray(owners).map(o => ({
@@ -537,25 +553,6 @@ const PropertiesModal = ({
     />
   );
 
-  const fetchChartInfo = useCallback(() => {
-    SupersetClient.get({
-      endpoint: `/api/v1/dashboard/${dashboardId}/charts`,
-    })
-      .then(response => {
-        const charts = response.json.result;
-        const chartInfoMap: Record<number, ChartInfo> = {};
-        charts.forEach((chart: any) => {
-          chartInfoMap[chart.id] = {
-            id: chart.id,
-            name: chart.slice_name,
-            ownerIds: chart.owners.map((owner: any) => owner.id),
-          };
-        });
-        setChartInfo(chartInfoMap);
-      })
-      .catch(handleErrorResponse);
-  }, [dashboardId, handleErrorResponse]);
-
   useEffect(() => {
     if (show) {
       if (!currentDashboardInfo) {
@@ -563,10 +560,22 @@ const PropertiesModal = ({
       } else {
         handleDashboardData(currentDashboardInfo);
       }
+
+      // Fetch chart info when the modal is shown
+      if (!hasFetchedCharts) {
+        fetchChartInfo();
+      }
     }
 
     JsonEditor.preload();
-  }, [currentDashboardInfo, fetchDashboardDetails, handleDashboardData, show]);
+  }, [
+    currentDashboardInfo,
+    fetchChartInfo,
+    fetchDashboardDetails,
+    handleDashboardData,
+    hasFetchedCharts,
+    show,
+  ]);
 
   useEffect(() => {
     // the title can be changed inline in the dashboard, this catches it
@@ -599,7 +608,7 @@ const PropertiesModal = ({
     } catch (error) {
       handleErrorResponse(error);
     }
-  }, [addDangerToast, dashboardId]);
+  }, [addDangerToast, dashboardId, handleErrorResponse]);
 
   const handleChangeTags = (tags: { label: string; value: number }[]) => {
     const parsedTags: TagType[] = ensureIsArray(tags).map(r => ({
@@ -618,6 +627,7 @@ const PropertiesModal = ({
 
   return (
     <Modal
+      aria-label={t('Dashboard properties')}
       show={show}
       onHide={onHide}
       title={t('Dashboard properties')}
