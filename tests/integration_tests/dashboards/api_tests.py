@@ -3030,16 +3030,18 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         )
         admin = self.get_user("admin")
 
+        trends = db.session.query(Slice).filter_by(slice_name="Trends").one()
+
         # Insert dashboard with owners
         dashboard = self.insert_dashboard(
             "title1",
             "slug1",
             [user_alpha1.id, admin.id],
+            slices=[trends]
         )
 
         boys = db.session.query(Slice).filter_by(slice_name="Boys").one()
         girls = db.session.query(Slice).filter_by(slice_name="Girls").one()
-        trends = db.session.query(Slice).filter_by(slice_name="Trends").one()
 
         boys.owners = [user_alpha1]
         girls.owners = [user_alpha2]
