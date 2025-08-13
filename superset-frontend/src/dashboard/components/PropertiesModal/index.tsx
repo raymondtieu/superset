@@ -261,17 +261,16 @@ const PropertiesModal = ({
     }, handleErrorResponse);
   }, [dashboardId, handleDashboardData, handleErrorResponse]);
 
-  const getJsonMetadata = useCallback(() => {
+  const getJsonMetadata = () => {
     try {
       const jsonMetadataObj = jsonMetadata?.length
         ? JSON.parse(jsonMetadata)
         : {};
-
       return jsonMetadataObj;
     } catch (_) {
       return {};
     }
-  }, [jsonMetadata]);
+  };
 
   const handleOnChangeOwners = (owners: { value: number; label: string }[]) => {
     const parsedOwners: Owners = ensureIsArray(owners).map(o => ({
@@ -620,10 +619,13 @@ const PropertiesModal = ({
 
   useEffect(() => {
     // Initialize auto-sync charts setting from JSON metadata
-    setAutoSyncChartsEnabled(
-      getJsonMetadata()?.auto_sync_chart_owners === true,
-    );
-  }, [getJsonMetadata]);
+    // Read and parse the jsonMetadata directly or we'll have to wrap getJsonMetadata in a useCallback
+    const jsonMetadataObj = jsonMetadata?.length
+      ? JSON.parse(jsonMetadata)
+      : {};
+
+    setAutoSyncChartsEnabled(jsonMetadataObj.auto_sync_chart_owners === true);
+  }, [jsonMetadata]);
 
   return (
     <Modal
