@@ -226,52 +226,35 @@ test('should render - FeatureFlag disabled', async () => {
     await screen.findByTestId('dashboard-edit-properties-form'),
   ).toBeInTheDocument();
 
-  const modal = screen.getByRole('dialog', { name: 'Dashboard properties' });
-  expect(modal).toBeInTheDocument();
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
 
   expect(
-    within(modal).getByRole('heading', { name: 'Basic information' }),
+    screen.getByRole('heading', { name: 'Basic information' }),
   ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('heading', { name: 'Access' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('heading', { name: 'Colors' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('heading', { name: 'Advanced' }),
-  ).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Access' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Colors' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Advanced' })).toBeInTheDocument();
 
   expect(
-    within(modal).getByRole('heading', { name: 'Certification' }),
+    screen.getByRole('heading', { name: 'Certification' }),
   ).toBeInTheDocument();
-  expect(within(modal).getAllByRole('heading')).toHaveLength(5);
+  expect(screen.getAllByRole('heading')).toHaveLength(5);
 
-  expect(
-    within(modal).getByRole('button', { name: 'Close' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('button', { name: 'Advanced' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('button', { name: 'Cancel' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('button', { name: 'Save' }),
-  ).toBeInTheDocument();
-  expect(within(modal).getAllByRole('button')).toHaveLength(4);
+  expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  expect(screen.getAllByRole('button')).toHaveLength(4);
 
-  expect(within(modal).getAllByRole('textbox')).toHaveLength(4);
-  expect(within(modal).getByRole('combobox')).toBeInTheDocument();
+  expect(screen.getAllByRole('textbox')).toHaveLength(4);
+  expect(screen.getByRole('combobox')).toBeInTheDocument();
 
   expect(spyColorSchemeControlWrapper).toBeCalledWith(
     expect.objectContaining({ colorScheme: 'supersetColors' }),
     {},
   );
 
-  expect(
-    within(modal).getByTestId('sync-chart-owners-control'),
-  ).toBeInTheDocument();
+  expect(screen.getByTestId('sync-chart-owners-control')).toBeInTheDocument();
 });
 
 test('should render - FeatureFlag enabled', async () => {
@@ -284,52 +267,35 @@ test('should render - FeatureFlag enabled', async () => {
     await screen.findByTestId('dashboard-edit-properties-form'),
   ).toBeInTheDocument();
 
-  const modal = screen.getByRole('dialog', { name: 'Dashboard properties' });
-  expect(modal).toBeInTheDocument();
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
 
   expect(
-    within(modal).getByRole('heading', { name: 'Basic information' }),
+    screen.getByRole('heading', { name: 'Basic information' }),
   ).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Access' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Advanced' })).toBeInTheDocument();
   expect(
-    within(modal).getByRole('heading', { name: 'Access' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('heading', { name: 'Advanced' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('heading', { name: 'Certification' }),
+    screen.getByRole('heading', { name: 'Certification' }),
   ).toBeInTheDocument();
   // Tags will be included since isFeatureFlag always returns true in this test
-  expect(
-    within(modal).getByRole('heading', { name: 'Tags' }),
-  ).toBeInTheDocument();
-  expect(within(modal).getAllByRole('heading')).toHaveLength(5);
+  expect(screen.getByRole('heading', { name: 'Tags' })).toBeInTheDocument();
+  expect(screen.getAllByRole('heading')).toHaveLength(5);
 
-  expect(
-    within(modal).getByRole('button', { name: 'Close' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('button', { name: 'Advanced' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('button', { name: 'Cancel' }),
-  ).toBeInTheDocument();
-  expect(
-    within(modal).getByRole('button', { name: 'Save' }),
-  ).toBeInTheDocument();
-  expect(within(modal).getAllByRole('button')).toHaveLength(4);
+  expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  expect(screen.getAllByRole('button')).toHaveLength(4);
 
-  expect(within(modal).getAllByRole('textbox')).toHaveLength(4);
-  expect(within(modal).getAllByRole('combobox')).toHaveLength(3);
+  expect(screen.getAllByRole('textbox')).toHaveLength(4);
+  expect(screen.getAllByRole('combobox')).toHaveLength(3);
 
   expect(spyColorSchemeControlWrapper).toBeCalledWith(
     expect.objectContaining({ colorScheme: 'supersetColors' }),
     {},
   );
 
-  expect(
-    within(modal).getByTestId('sync-chart-owners-control'),
-  ).toBeInTheDocument();
+  expect(screen.getByTestId('sync-chart-owners-control')).toBeInTheDocument();
 });
 
 test('should open advance', async () => {

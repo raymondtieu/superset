@@ -625,7 +625,6 @@ const PropertiesModal = ({
 
   return (
     <Modal
-      aria-label={t('Dashboard properties')}
       show={show}
       onHide={onHide}
       title={t('Dashboard properties')}
