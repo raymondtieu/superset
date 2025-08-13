@@ -606,13 +606,18 @@ const PropertiesModal = ({
   };
 
   useEffect(() => {
-    // Initialize auto-sync charts setting from JSON metadata
+    // Update auto-sync charts setting from JSON metadata
     // Read and parse the jsonMetadata directly or we'll have to wrap getJsonMetadata in a useCallback
-    const jsonMetadataObj = jsonMetadata?.length
-      ? JSON.parse(jsonMetadata)
-      : {};
+    let syncCharts = false;
 
-    const syncCharts = jsonMetadataObj.auto_sync_chart_owners === true;
+    try {
+      const jsonMetadataObj = jsonMetadata?.length
+        ? JSON.parse(jsonMetadata)
+        : {};
+      syncCharts = jsonMetadataObj.auto_sync_chart_owners === true;
+    } catch (_) {
+      syncCharts = false;
+    }
 
     setAutoSyncChartsEnabled(syncCharts);
 

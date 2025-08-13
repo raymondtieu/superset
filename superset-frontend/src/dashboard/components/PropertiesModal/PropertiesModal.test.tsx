@@ -234,7 +234,6 @@ test('should render - FeatureFlag disabled', async () => {
   expect(screen.getByRole('heading', { name: 'Access' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Colors' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Advanced' })).toBeInTheDocument();
-
   expect(
     screen.getByRole('heading', { name: 'Certification' }),
   ).toBeInTheDocument();
@@ -267,7 +266,9 @@ test('should render - FeatureFlag enabled', async () => {
     await screen.findByTestId('dashboard-edit-properties-form'),
   ).toBeInTheDocument();
 
-  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  expect(
+    screen.getByRole('dialog', { name: 'Dashboard properties' }),
+  ).toBeInTheDocument();
 
   expect(
     screen.getByRole('heading', { name: 'Basic information' }),
@@ -622,19 +623,11 @@ describe('sync chart owners', () => {
     expect(tooltip).not.toBeInTheDocument();
   });
 
-  it('should not be checked if metadata is empty', async () => {
+  it('should not be checked if metadata does not have param', async () => {
     spyIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
-    const propsWithDashboardInfo = {
-      ...props,
-      dashboardInfo: {
-        ...dashboardInfo,
-        metadata: '{}',
-      },
-    };
-
-    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+    render(<PropertiesModal {...props} />, {
       useRedux: true,
     });
 
@@ -684,16 +677,7 @@ describe('sync chart owners', () => {
     spyIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
-    const propsWithDashboardInfo = {
-      ...props,
-      dashboardInfo: {
-        ...dashboardInfo,
-        metadata: { auto_sync_chart_owners: false },
-      },
-    };
-
-    fetchMock.resetHistory();
-    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+    render(<PropertiesModal {...props} />, {
       useRedux: true,
     });
 
@@ -756,6 +740,64 @@ describe('sync chart owners', () => {
     await waitFor(() => {
       expect(checkbox).toBeChecked();
       expect(fetchMock.calls(mockChartsEndpoint).length).toBe(1);
+    });
+  });
+
+  test('should update when metadata changes', async () => {
+    spyIsFeatureEnabled.mockReturnValue(true);
+
+    const props = createProps();
+    const propsWithDashboardInfo = {
+      ...props,
+      dashboardInfo: {
+        ...dashboardInfo,
+        metadata: { auto_sync_chart_owners: false },
+      },
+    };
+
+    render(<PropertiesModal {...propsWithDashboardInfo} />, {
+      useRedux: true,
+    });
+
+    const checkbox = await within(
+      screen.getByTestId('sync-chart-owners-control'),
+    ).findByRole('checkbox');
+
+    // Wait for the checkbox to have its final state (not checked)
+    await waitFor(() => {
+      expect(checkbox).not.toBeChecked();
+    });
+    // Ensure the API call was not made
+    expect(fetchMock.called(mockChartsEndpoint)).toBe(false);
+
+    userEvent.click(screen.getByRole('button', { name: 'Advanced' }));
+
+    const container = screen.getByTestId('dashboard-edit-properties-form');
+
+    const metadataInput = container.getElementsByClassName(
+      'ace_text-input',
+    )[0] as HTMLTextAreaElement;
+
+    await waitFor(() => {
+      expect(metadataInput).toBeInTheDocument();
+    });
+
+    // Clear and set new content using ACE API
+    const aceEditor = container.querySelector('.ace_editor') as any;
+    const editor = (window as any).ace.edit(aceEditor);
+    editor.setValue('{"auto_sync_chart_owners": true}', 1);
+    editor.clearSelection();
+
+    await waitFor(() => {
+      expect(checkbox).toBeChecked();
+      expect(fetchMock.calls(mockChartsEndpoint).length).toBe(1);
+    });
+
+    editor.setValue('invalid json', 1);
+    editor.clearSelection();
+
+    await waitFor(() => {
+      expect(checkbox).not.toBeChecked();
     });
   });
 });
