@@ -3053,7 +3053,7 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
                     "auto_sync_chart_owners": True
                 }
             ),
-            "slices": [boys, girls, trends]
+            "slices": [boys.id, girls.id, trends.id]
         }
         self.login(ADMIN_USERNAME)
         uri = f"api/v1/dashboard/{dashboard.id}"
