@@ -3056,7 +3056,23 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         db.session.commit()
 
         dashboard_data = {
-            "slices": [boys.id, girls.id, trends.id]
+            "position_json": json.dumps({
+                f"CHART-{boys.id}": {
+                    "type": "CHART",
+                    "meta": {"chartId": boys.id},
+                    "id": f"CHART-{boys.id}"
+                },
+                f"CHART-{girls.id}": {
+                    "type": "CHART",
+                    "meta": {"chartId": girls.id},
+                    "id": f"CHART-{girls.id}"
+                },
+                f"CHART-{trends.id}": {
+                    "type": "CHART",
+                    "meta": {"chartId": trends.id},
+                    "id": f"CHART-{trends.id}"
+                }
+            })
         }
         self.login(ADMIN_USERNAME)
         uri = f"api/v1/dashboard/{dashboard.id}"
