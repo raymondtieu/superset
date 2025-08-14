@@ -18,6 +18,7 @@
 """Unit tests for Superset"""
 
 from io import BytesIO
+import logging
 from time import sleep
 from unittest.mock import ANY, patch
 from zipfile import is_zipfile, ZipFile
@@ -71,6 +72,7 @@ from tests.integration_tests.fixtures.world_bank_dashboard import (
 
 DASHBOARDS_FIXTURE_COUNT = 10
 
+logger = logging.getLogger(__name__)
 
 class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCase):
     resource_name = "dashboard"
@@ -3059,6 +3061,12 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         self.login(ADMIN_USERNAME)
         uri = f"api/v1/dashboard/{dashboard.id}"
         rv = self.client.put(uri, json=dashboard_data)
+
+        logger.warning(f"Status code: {rv.status_code}")
+        logger.warning(f"Response data: {rv.data.decode('utf-8')}")
+        print(f"Status code: {rv.status_code}")
+        print(f"Response data: {rv.data.decode('utf-8')}")
+
         self.assertEqual(rv.status_code, 200)
 
         # Check that chart owners were updated
