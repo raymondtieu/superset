@@ -3058,13 +3058,8 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         self.login(ADMIN_USERNAME)
         uri = f"api/v1/dashboard/{dashboard.id}"
         rv = self.client.put(uri, json=dashboard_data)
-
-        print(f"Status code: {rv.status_code}")
-        print(f"Response data: {rv.data.decode('utf-8')}")
-
         self.assertEqual(rv.status_code, 200)
 
-        # Check that chart owners were updated
         boys = db.session.query(Slice).filter_by(slice_name="Boys").one()
         girls = db.session.query(Slice).filter_by(slice_name="Girls").one()
         trends = db.session.query(Slice).filter_by(slice_name="Trends").one()
@@ -3091,4 +3086,5 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         # Rollback changes
         db.session.delete(dashboard)
         db.session.delete(user_alpha1)
+        db.session.delete(user_alpha2)
         db.session.commit()
