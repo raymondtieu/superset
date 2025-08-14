@@ -3029,6 +3029,8 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         )
         admin = self.get_user("admin")
 
+        boys = db.session.query(Slice).filter_by(slice_name="Boys").one()
+        girls = db.session.query(Slice).filter_by(slice_name="Girls").one()
         trends = db.session.query(Slice).filter_by(slice_name="Trends").one()
 
         # Insert dashboard with owners
@@ -3036,15 +3038,8 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
             "title1",
             "slug1",
             [user_alpha1.id, admin.id],
-            json_metadata=json.dumps(
-                {
-                    "auto_sync_chart_owners": True
-                }
-            ),
+            slices=[boys, girls, trends]
         )
-
-        boys = db.session.query(Slice).filter_by(slice_name="Boys").one()
-        girls = db.session.query(Slice).filter_by(slice_name="Girls").one()
 
         boys.owners = [user_alpha1]
         girls.owners = [user_alpha2]
@@ -3053,24 +3048,13 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         db.session.commit()
 
         dashboard_data = {
-            "position_json": json.dumps({
-                f"CHART-{boys.id}": {
-                    "type": "CHART",
-                    "meta": {"chartId": boys.id},
-                    "id": f"CHART-{boys.id}"
-                },
-                f"CHART-{girls.id}": {
-                    "type": "CHART",
-                    "meta": {"chartId": girls.id},
-                    "id": f"CHART-{girls.id}"
-                },
-                f"CHART-{trends.id}": {
-                    "type": "CHART",
-                    "meta": {"chartId": trends.id},
-                    "id": f"CHART-{trends.id}"
+            "json_metadata": json.dumps(
+                {
+                    "auto_sync_chart_owners": True
                 }
-            })
+            ),
         }
+
         self.login(ADMIN_USERNAME)
         uri = f"api/v1/dashboard/{dashboard.id}"
         rv = self.client.put(uri, json=dashboard_data)
