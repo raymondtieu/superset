@@ -483,7 +483,9 @@ class Dashboard(AuditMixinNullable, ImportExportMixin, Model):
         A chart will have its own owners updated if the owners of the dashboard
         and chart have mutual owners.
         """
-        print("Syncing dashboard chart owners...:" + self.auto_sync_chart_owners)
+        print(
+            "Syncing dashboard chart owners...:" + str(self.auto_sync_chart_owners)
+        )
         if not self.auto_sync_chart_owners:
             return
 
