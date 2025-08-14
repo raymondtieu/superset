@@ -3037,7 +3037,11 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
             "title1",
             "slug1",
             [user_alpha1.id, admin.id],
-            slices=[trends]
+            json_metadata=json.dumps(
+                {
+                    "auto_sync_chart_owners": True
+                }
+            ),
         )
 
         boys = db.session.query(Slice).filter_by(slice_name="Boys").one()
@@ -3050,11 +3054,6 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
         db.session.commit()
 
         dashboard_data = {
-            "json_metadata": json.dumps(
-                {
-                    "auto_sync_chart_owners": True
-                }
-            ),
             "slices": [boys.id, girls.id, trends.id]
         }
         self.login(ADMIN_USERNAME)
