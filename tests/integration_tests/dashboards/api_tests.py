@@ -390,6 +390,7 @@ class TestDashboardApi(ApiOwnersTestCaseMixin, InsertChartMixin, SupersetTestCas
             "description_markeddown",
             "form_data",
             "id",
+            "owners",
             "slice_name",
             "slice_url",
         }
