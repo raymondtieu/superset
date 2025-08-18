@@ -45,71 +45,8 @@ npm-install() {
   say "::group::Install npm packages"
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
-  
-  # Configure npm to avoid potential issues
-  npm config set fetch-retry-mintimeout 20000
-  npm config set fetch-retry-maxtimeout 120000
-  npm config set fetch-timeout 300000
-  npm config set maxsockets 5
-  
-  # Function to verify eslint is available
-  verify_eslint() {
-    if [ -f "node_modules/.bin/eslint" ] && [ -x "node_modules/.bin/eslint" ]; then
-      echo "✓ ESLint binary verified at node_modules/.bin/eslint"
-      return 0
-    else
-      echo "✗ ESLint binary not found or not executable"
-      return 1
-    fi
-  }
-
-  # Multiple attempts to work around npm "Exit handler never called!" bug
-  attempt=1
-  max_attempts=3
-  
-  while [ $attempt -le $max_attempts ]; do
-    echo "Attempting npm install (attempt $attempt)..."
-    
-    case $attempt in
-      1)
-        if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
-          if verify_eslint; then
-            echo "npm install succeeded on attempt $attempt"
-            break
-          else
-            echo "npm install completed but ESLint not properly installed"
-          fi
-        fi
-        ;;
-      2)
-        echo "Clearing cache and retrying..."
-        npm cache clean --force
-        if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
-          if verify_eslint; then
-            echo "npm install succeeded on attempt $attempt"
-            break
-          else
-            echo "npm install completed but ESLint not properly installed"
-          fi
-        fi
-        ;;
-      3)
-        echo "Trying with minimal flags..."
-        npm cache clean --force
-        rm -rf node_modules
-        if timeout 600 npm install --legacy-peer-deps; then
-          if verify_eslint; then
-            echo "npm install succeeded on attempt $attempt"
-            break
-          else
-            echo "npm install completed but ESLint not properly installed"
-          fi
-        fi
-        ;;
-    esac
-    
-    attempt=$((attempt + 1))
-  done
+  # Try npm ci first, fallback to npm install with legacy flags if needed
+  npm ci --legacy-peer-deps || npm install --legacy-peer-deps --no-optional --no-audit --no-fund || npm install --legacy-peer-deps --force
   say "::endgroup::"
 
   cache-save npm
