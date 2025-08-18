@@ -39,6 +39,7 @@ jobs:
         uses: ./.github/actions/cached-dependencies
         with:
           run: npm-install
+          bashlib: ./.github/workflows/bashlib.sh
       - name: eslint
         if: steps.check.outputs.frontend
         working-directory: ./superset-frontend
