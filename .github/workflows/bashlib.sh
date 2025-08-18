@@ -46,8 +46,42 @@ npm-install() {
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
   
-  # Use npm install with legacy-peer-deps for compatibility (avoids npm ci bugs)
-  npm install --legacy-peer-deps --no-optional --no-audit --no-fund
+  # Configure npm to avoid potential issues
+  npm config set fetch-retry-mintimeout 20000
+  npm config set fetch-retry-maxtimeout 120000
+  npm config set fetch-timeout 300000
+  npm config set maxsockets 5
+  
+  # Multiple attempts to work around npm "Exit handler never called!" bug
+  echo "Attempting npm install (attempt 1)..."
+  if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
+    echo "npm install succeeded on first attempt"
+  else
+    echo "First attempt failed, clearing cache and retrying..."
+    npm cache clean --force
+    echo "Attempting npm install (attempt 2)..."
+    if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
+      echo "npm install succeeded on second attempt"
+    else
+      echo "Second attempt failed, trying with minimal flags..."
+      npm cache clean --force
+      rm -rf node_modules
+      echo "Attempting npm install (attempt 3 - minimal flags)..."
+      if timeout 600 npm install --legacy-peer-deps; then
+        echo "npm install succeeded on third attempt"
+      else
+        echo "All npm install attempts failed, installing yarn and trying yarn..."
+        npm install -g yarn
+        echo "Attempting yarn install..."
+        if timeout 600 yarn install; then
+          echo "yarn install succeeded"
+        else
+          echo "yarn failed, final npm attempt with --force..."
+          timeout 600 npm install --force
+        fi
+      fi
+    fi
+  fi
   say "::endgroup::"
 
   cache-save npm
