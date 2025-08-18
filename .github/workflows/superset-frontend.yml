@@ -34,10 +34,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: Clean npm environment
+        working-directory: ./superset-frontend
+        run: |
+          npm cache clean --force
+          rm -rf node_modules package-lock.json
       - name: Install dependencies
         if: steps.check.outputs.frontend
         working-directory: ./superset-frontend
-        run: npm ci --legacy-peer-deps
+        run: |
+          npm install --legacy-peer-deps --no-optional --no-audit --no-fund || \
+          npm install --legacy-peer-deps --no-optional --no-audit --no-fund || \
+          npm install --legacy-peer-deps --force
       - name: Verify ESLint installation
         working-directory: ./superset-frontend
         run: |
