@@ -52,36 +52,64 @@ npm-install() {
   npm config set fetch-timeout 300000
   npm config set maxsockets 5
   
-  # Multiple attempts to work around npm "Exit handler never called!" bug
-  echo "Attempting npm install (attempt 1)..."
-  if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
-    echo "npm install succeeded on first attempt"
-  else
-    echo "First attempt failed, clearing cache and retrying..."
-    npm cache clean --force
-    echo "Attempting npm install (attempt 2)..."
-    if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
-      echo "npm install succeeded on second attempt"
+  # Function to verify eslint is available
+  verify_eslint() {
+    if [ -f "node_modules/.bin/eslint" ] && [ -x "node_modules/.bin/eslint" ]; then
+      echo "✓ ESLint binary verified at node_modules/.bin/eslint"
+      return 0
     else
-      echo "Second attempt failed, trying with minimal flags..."
-      npm cache clean --force
-      rm -rf node_modules
-      echo "Attempting npm install (attempt 3 - minimal flags)..."
-      if timeout 600 npm install --legacy-peer-deps; then
-        echo "npm install succeeded on third attempt"
-      else
-        echo "All npm install attempts failed, installing yarn and trying yarn..."
-        npm install -g yarn
-        echo "Attempting yarn install..."
-        if timeout 600 yarn install; then
-          echo "yarn install succeeded"
-        else
-          echo "yarn failed, final npm attempt with --force..."
-          timeout 600 npm install --force
-        fi
-      fi
+      echo "✗ ESLint binary not found or not executable"
+      return 1
     fi
-  fi
+  }
+
+  # Multiple attempts to work around npm "Exit handler never called!" bug
+  attempt=1
+  max_attempts=3
+  
+  while [ $attempt -le $max_attempts ]; do
+    echo "Attempting npm install (attempt $attempt)..."
+    
+    case $attempt in
+      1)
+        if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
+          if verify_eslint; then
+            echo "npm install succeeded on attempt $attempt"
+            break
+          else
+            echo "npm install completed but ESLint not properly installed"
+          fi
+        fi
+        ;;
+      2)
+        echo "Clearing cache and retrying..."
+        npm cache clean --force
+        if timeout 600 npm install --legacy-peer-deps --omit=optional --no-audit --no-fund; then
+          if verify_eslint; then
+            echo "npm install succeeded on attempt $attempt"
+            break
+          else
+            echo "npm install completed but ESLint not properly installed"
+          fi
+        fi
+        ;;
+      3)
+        echo "Trying with minimal flags..."
+        npm cache clean --force
+        rm -rf node_modules
+        if timeout 600 npm install --legacy-peer-deps; then
+          if verify_eslint; then
+            echo "npm install succeeded on attempt $attempt"
+            break
+          else
+            echo "npm install completed but ESLint not properly installed"
+          fi
+        fi
+        ;;
+    esac
+    
+    attempt=$((attempt + 1))
+  done
   say "::endgroup::"
 
   cache-save npm
