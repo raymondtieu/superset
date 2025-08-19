@@ -63,9 +63,17 @@ npm-install() {
   
   # Check if npm ci actually succeeded by verifying .bin directory exists
   if [ ! -d node_modules/.bin ]; then
-    echo "npm ci did not complete successfully (no .bin directory), trying npm install as fallback..."
+    echo "npm ci failed to create .bin directory - package-lock.json may be corrupted"
+    echo "Regenerating package-lock.json and trying npm install..."
+    
+    # Clean up and regenerate package-lock.json
     rm -rf node_modules 2>/dev/null || true
+    rm -f package-lock.json 2>/dev/null || true
+    
+    # Install fresh with new lock file
     npm install --legacy-peer-deps --no-audit --no-fund
+    
+    echo "New package-lock.json generated successfully"
   fi
   
   echo "Final state check:"
