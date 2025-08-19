@@ -39,13 +39,31 @@ pip-upgrade() {
 
 # prepare (lint and build) frontend code
 npm-install() {
+  echo "=== npm-install Debug ==="
+  echo "Starting directory: $(pwd)"
+  echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+  echo "Target directory: $GITHUB_WORKSPACE/superset-frontend"
+  
   cd "$GITHUB_WORKSPACE/superset-frontend"
+  echo "After cd, current directory: $(pwd)"
+  echo "Files in current directory:"
+  ls -la
+  echo "package-lock.json exists: $(test -f package-lock.json && echo 'YES' || echo 'NO')"
+  echo "node_modules exists: $(test -d node_modules && echo 'YES' || echo 'NO')"
+  echo "========================="
 
   # cache-restore npm
   say "::group::Install npm packages"
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
   npm ci --legacy-peer-deps --no-optional --no-audit --no-fund
+  echo "npm ci exit code: $?"
+  echo "node_modules exists after npm ci: $(test -d node_modules && echo 'YES' || echo 'NO')"
+  if [ -d node_modules ]; then
+    echo "node_modules/.bin/ exists: $(test -d node_modules/.bin && echo 'YES' || echo 'NO')"
+    echo "Contents of node_modules/.bin/:"
+    ls -la node_modules/.bin/ | head -10
+  fi
   say "::endgroup::"
 
   # cache-save npm
