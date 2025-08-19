@@ -623,7 +623,6 @@ const PropertiesModal = ({
 
     // Fetch chart info when sync is enabled for the first time
     if (syncCharts && !hasFetchedCharts) {
-      setHasFetchedCharts(true);
       fetchChartInfo();
     }
   }, [fetchChartInfo, hasFetchedCharts, jsonMetadata]);
