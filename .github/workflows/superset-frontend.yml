@@ -49,7 +49,7 @@ jobs:
         continue-on-error: true
         working-directory: ./superset-frontend
         run: |
-          npm rebuild
+          npm rebuild || npm install --legacy-peer-deps --no-optional --no-audit --no-fund
           npm run eslint -- . --quiet
       - name: tsc
         if: steps.check.outputs.frontend

@@ -45,7 +45,7 @@ npm-install() {
   say "::group::Install npm packages"
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
-  npm install --legacy-peer-deps --no-optional --no-audit --no-fund
+  npm ci --legacy-peer-deps --no-optional --no-audit --no-fund
   say "::endgroup::"
 
   # cache-save npm
