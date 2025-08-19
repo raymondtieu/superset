@@ -74,6 +74,8 @@ npm-install() {
     npm install --legacy-peer-deps --no-audit --no-fund
     
     echo "New package-lock.json generated successfully"
+    echo "Contents of new package-lock.json:"
+    cat package-lock.json
   fi
   
   echo "Final state check:"
