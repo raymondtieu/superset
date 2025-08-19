@@ -57,9 +57,13 @@ npm-install() {
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
   
-  # Try npm ci first, but fall back to npm install if it fails
-  if ! npm ci --legacy-peer-deps --no-audit --no-fund; then
-    echo "npm ci failed, trying npm install as fallback..."
+  # Try npm ci first
+  echo "Attempting npm ci..."
+  npm ci --legacy-peer-deps --no-audit --no-fund
+  
+  # Check if npm ci actually succeeded by verifying .bin directory exists
+  if [ ! -d node_modules/.bin ]; then
+    echo "npm ci did not complete successfully (no .bin directory), trying npm install as fallback..."
     rm -rf node_modules 2>/dev/null || true
     npm install --legacy-peer-deps --no-audit --no-fund
   fi
@@ -72,7 +76,11 @@ npm-install() {
       echo "Contents of node_modules/.bin/:"
       ls -la node_modules/.bin/ | head -10
       echo "eslint available: $(test -f node_modules/.bin/eslint && echo 'YES' || echo 'NO')"
+    else
+      echo "ERROR: .bin directory was not created - npm installation failed"
     fi
+  else
+    echo "ERROR: node_modules directory was not created - npm installation failed"
   fi
   say "::endgroup::"
 
