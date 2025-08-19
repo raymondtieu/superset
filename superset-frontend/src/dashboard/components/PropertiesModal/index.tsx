@@ -62,6 +62,7 @@ import {
   setDashboardMetadata,
 } from 'src/dashboard/actions/dashboardState';
 import { areObjectsEqual } from 'src/reduxUtils';
+import SyncChartOwnersControl from 'src/dashboard/components/PropertiesModal/SyncChartOwnersControl';
 
 const StyledFormItem = styled(FormItem)`
   margin-bottom: 0;
@@ -97,6 +98,11 @@ type DashboardInfo = {
   isManagedExternally: boolean;
   metadata: Record<string, any>;
 };
+export type ChartInfo = {
+  id: number;
+  name: string;
+  ownerIds: number[];
+};
 
 const PropertiesModal = ({
   addSuccessToast,
@@ -122,6 +128,9 @@ const PropertiesModal = ({
   const [roles, setRoles] = useState<Roles>([]);
   const saveLabel = onlyApply ? t('Apply') : t('Save');
   const [tags, setTags] = useState<TagType[]>([]);
+  const [autoSyncChartsEnabled, setAutoSyncChartsEnabled] = useState(false);
+  const [hasFetchedCharts, setHasFetchedCharts] = useState(false);
+  const [chartInfo, setChartInfo] = useState<Record<number, ChartInfo>>({});
   const categoricalSchemeRegistry = getCategoricalSchemeRegistry();
   const originalDashboardMetadata = useRef<Record<string, any>>({});
   const canAccessRoles = userHasPermission(
@@ -136,9 +145,9 @@ const PropertiesModal = ({
       label: tag.name,
     }));
     return selectTags;
-  }, [tags.length]);
+  }, [tags]);
 
-  const handleErrorResponse = async (response: Response) => {
+  const handleErrorResponse = useCallback(async (response: Response) => {
     const { error, statusText, message } = await getClientErrorObject(response);
     let errorText = error || statusText || t('An error has occurred');
     if (typeof message === 'object' && 'json_metadata' in message) {
@@ -156,7 +165,7 @@ const PropertiesModal = ({
       content: errorText,
       okButtonProps: { danger: true, className: 'btn-danger' },
     });
-  };
+  }, []);
 
   const loadAccessOptions = useCallback(
     (accessType = 'owners', input = '', page: number, pageSize: number) => {
@@ -224,6 +233,27 @@ const PropertiesModal = ({
     [form],
   );
 
+  const fetchChartInfo = useCallback(() => {
+    setHasFetchedCharts(true);
+
+    SupersetClient.get({
+      endpoint: `/api/v1/dashboard/${dashboardId}/charts`,
+    })
+      .then(response => {
+        const charts = response.json.result;
+        const chartInfoMap: Record<number, ChartInfo> = {};
+        charts.forEach((chart: any) => {
+          chartInfoMap[chart.id] = {
+            id: chart.id,
+            name: chart.slice_name,
+            ownerIds: (chart.owners ?? []).map((owner: any) => owner.id),
+          };
+        });
+        setChartInfo(chartInfoMap);
+      })
+      .catch(handleErrorResponse);
+  }, [dashboardId, handleErrorResponse]);
+
   const fetchDashboardDetails = useCallback(() => {
     setIsLoading(true);
     // We fetch the dashboard details because not all code
@@ -245,7 +275,7 @@ const PropertiesModal = ({
 
       setIsLoading(false);
     }, handleErrorResponse);
-  }, [dashboardId, handleDashboardData]);
+  }, [dashboardId, handleDashboardData, handleErrorResponse]);
 
   const getJsonMetadata = () => {
     try {
@@ -545,6 +575,20 @@ const PropertiesModal = ({
     );
   };
 
+  const getAutoSyncChartsControl = () => (
+    <SyncChartOwnersControl
+      autoSyncChartsEnabled={autoSyncChartsEnabled}
+      onChange={(val: boolean): void => {
+        const nextVal = val ?? false;
+        const jsonMetadataObj = getJsonMetadata();
+        jsonMetadataObj.auto_sync_chart_owners = nextVal;
+        setJsonMetadata(jsonStringify(jsonMetadataObj));
+      }}
+      dashboardOwnerIds={owners.map(owner => owner.id)}
+      chartInfoMap={chartInfo}
+    />
+  );
+
   useEffect(() => {
     if (show) {
       if (!currentDashboardInfo) {
@@ -588,7 +632,7 @@ const PropertiesModal = ({
     } catch (error) {
       handleErrorResponse(error);
     }
-  }, [dashboardId]);
+  }, [addDangerToast, dashboardId, handleErrorResponse]);
 
   const handleChangeTags = (tags: { label: string; value: number }[]) => {
     const parsedTags: TagType[] = ensureIsArray(tags).map(r => ({
@@ -597,6 +641,28 @@ const PropertiesModal = ({
     }));
     setTags(parsedTags);
   };
+
+  useEffect(() => {
+    // Update auto-sync charts setting from JSON metadata
+    // Read and parse the jsonMetadata directly or we'll have to wrap getJsonMetadata in a useCallback
+    let syncCharts = false;
+
+    try {
+      const jsonMetadataObj = jsonMetadata?.length
+        ? JSON.parse(jsonMetadata)
+        : {};
+      syncCharts = jsonMetadataObj.auto_sync_chart_owners === true;
+    } catch (_) {
+      syncCharts = false;
+    }
+
+    setAutoSyncChartsEnabled(syncCharts);
+
+    // Fetch chart info when sync is enabled for the first time
+    if (syncCharts && !hasFetchedCharts) {
+      fetchChartInfo();
+    }
+  }, [fetchChartInfo, hasFetchedCharts, jsonMetadata]);
 
   return (
     <Modal
@@ -667,9 +733,12 @@ const PropertiesModal = ({
             </p>
           </Col>
         </Row>
-        {isFeatureEnabled(FeatureFlag.DashboardRbac) && canAccessRoles
-          ? getRowsWithRoles()
-          : getRowsWithoutRoles()}
+        <>
+          {isFeatureEnabled(FeatureFlag.DashboardRbac) && canAccessRoles
+            ? getRowsWithRoles()
+            : getRowsWithoutRoles()}
+          {getAutoSyncChartsControl()}
+        </>
         <Row>
           <Col xs={24} md={24}>
             <h3>{t('Certification')}</h3>
