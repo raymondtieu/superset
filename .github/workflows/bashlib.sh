@@ -41,15 +41,15 @@ pip-upgrade() {
 npm-install() {
   cd "$GITHUB_WORKSPACE/superset-frontend"
 
-  cache-restore npm
+  # cache-restore npm
   say "::group::Install npm packages"
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
   # Try npm ci first, fallback to npm install with legacy flags if needed
-  npm ci --legacy-peer-deps || npm install --legacy-peer-deps --no-optional --no-audit --no-fund || npm install --legacy-peer-deps --force
+  npm ci --legacy-peer-deps || npm install --legacy-peer-deps --no-optional --no-audit --no-fund
   say "::endgroup::"
 
-  cache-save npm
+  # cache-save npm
 }
 
 build-assets() {
