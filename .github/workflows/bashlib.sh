@@ -56,13 +56,23 @@ npm-install() {
   say "::group::Install npm packages"
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
-  npm ci --legacy-peer-deps --no-optional --no-audit --no-fund
-  echo "npm ci exit code: $?"
-  echo "node_modules exists after npm ci: $(test -d node_modules && echo 'YES' || echo 'NO')"
+  
+  # Try npm ci first, but fall back to npm install if it fails
+  if ! npm ci --legacy-peer-deps --no-audit --no-fund; then
+    echo "npm ci failed, trying npm install as fallback..."
+    rm -rf node_modules 2>/dev/null || true
+    npm install --legacy-peer-deps --no-audit --no-fund
+  fi
+  
+  echo "Final state check:"
+  echo "node_modules exists: $(test -d node_modules && echo 'YES' || echo 'NO')"
   if [ -d node_modules ]; then
     echo "node_modules/.bin/ exists: $(test -d node_modules/.bin && echo 'YES' || echo 'NO')"
-    echo "Contents of node_modules/.bin/:"
-    ls -la node_modules/.bin/ | head -10
+    if [ -d node_modules/.bin ]; then
+      echo "Contents of node_modules/.bin/:"
+      ls -la node_modules/.bin/ | head -10
+      echo "eslint available: $(test -f node_modules/.bin/eslint && echo 'YES' || echo 'NO')"
+    fi
   fi
   say "::endgroup::"
 
