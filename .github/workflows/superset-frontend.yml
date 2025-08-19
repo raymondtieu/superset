@@ -40,6 +40,22 @@ jobs:
         with:
           run: npm-install
           bashlib: ./.github/workflows/bashlib.sh
+      - name: Debug after npm install
+        if: steps.check.outputs.frontend
+        working-directory: ./superset-frontend
+        run: |
+          echo "=== POST-INSTALL DEBUG ==="
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "node_modules exists?"
+          ls -la node_modules/ || echo "node_modules directory not found"
+          echo "node_modules/.bin exists?"
+          ls -la node_modules/.bin/ || echo "node_modules/.bin directory not found"
+          echo "Package.json exists?"
+          ls -la package.json || echo "package.json not found"
+          echo "Package-lock.json exists?"
+          ls -la package-lock.json || echo "package-lock.json not found"
       - name: Verify ESLint installation
         working-directory: ./superset-frontend
         run: |
