@@ -39,13 +39,60 @@ pip-upgrade() {
 
 # prepare (lint and build) frontend code
 npm-install() {
+  echo "=== npm-install Debug ==="
+  echo "Starting directory: $(pwd)"
+  echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+  echo "Target directory: $GITHUB_WORKSPACE/superset-frontend"
+
   cd "$GITHUB_WORKSPACE/superset-frontend"
+  echo "After cd, current directory: $(pwd)"
+  echo "Files in current directory:"
+  ls -la
+  echo "package-lock.json exists: $(test -f package-lock.json && echo 'YES' || echo 'NO')"
+  echo "node_modules exists: $(test -d node_modules && echo 'YES' || echo 'NO')"
+  echo "========================="
 
   # cache-restore npm
   say "::group::Install npm packages"
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
   npm ci
+
+  # Try npm ci first
+  echo "Attempting npm ci..."
+  npm ci --legacy-peer-deps --no-audit --no-fund
+
+  # Check if npm ci actually succeeded by verifying .bin directory exists
+  if [ ! -d node_modules/.bin ]; then
+    echo "npm ci failed to create .bin directory - package-lock.json may be corrupted"
+    echo "Regenerating package-lock.json and trying npm install..."
+
+    # Clean up and regenerate package-lock.json
+    rm -rf node_modules 2>/dev/null || true
+    rm -f package-lock.json 2>/dev/null || true
+
+    # Install fresh with new lock file
+    npm install --legacy-peer-deps --no-audit --no-fund
+
+    echo "New package-lock.json generated successfully"
+    echo "Contents of new package-lock.json:"
+    cat package-lock.json
+  fi
+
+  echo "Final state check:"
+  echo "node_modules exists: $(test -d node_modules && echo 'YES' || echo 'NO')"
+  if [ -d node_modules ]; then
+    echo "node_modules/.bin/ exists: $(test -d node_modules/.bin && echo 'YES' || echo 'NO')"
+    if [ -d node_modules/.bin ]; then
+      echo "Contents of node_modules/.bin/:"
+      ls -la node_modules/.bin/ | head -10
+      echo "eslint available: $(test -f node_modules/.bin/eslint && echo 'YES' || echo 'NO')"
+    else
+      echo "ERROR: .bin directory was not created - npm installation failed"
+    fi
+  else
+    echo "ERROR: node_modules directory was not created - npm installation failed"
+  fi
   say "::endgroup::"
 
   # cache-save npm
