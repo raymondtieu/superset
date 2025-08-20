@@ -48,15 +48,12 @@ npm-install() {
 
   # Configure npm for better network reliability
   echo "Configuring npm for network timeouts and retries..."
-  npm config set timeout 300000          # 5 minutes timeout
   npm config set fetch-timeout 300000    # 5 minutes fetch timeout
   npm config set fetch-retries 5         # Retry failed downloads 5 times
   npm config set fetch-retry-factor 2    # Exponential backoff
-  npm config set fetch-retry-mintimeout 10000   # Min 10s between retries
-  npm config set fetch-retry-maxtimeout 60000   # Max 60s between retries
   
   echo "Current npm config:"
-  npm config get timeout
+  npm config get fetch-timeout
   npm config get fetch-retries
   
   npm ci --legacy-peer-deps --no-audit --no-fund
