@@ -47,20 +47,28 @@ npm-install() {
   echo "node: $(node --version)"
 
   npm ci --legacy-peer-deps --no-audit --no-fund
-
+  
+  echo "Final state check:"
+  echo "node_modules exists: $(test -d node_modules && echo 'YES' || echo 'NO')"
+  echo "node_modules/.bin exists: $(test -d node_modules/.bin && echo 'YES' || echo 'NO')"
+  
   # Check if npm ci actually succeeded by verifying .bin directory exists
   if [ ! -d node_modules/.bin ]; then
     echo "npm ci failed to create .bin directory - package-lock.json may be corrupted"
-  fi
-
-  echo "Final state check:"
-  echo "node_modules exists: $(test -d node_modules && echo 'YES' || echo 'NO')"
-  if [ ! -d node_modules ]; then
-    echo "ERROR: node_modules directory was not created - npm installation failed"
-    echo "node_modules/.bin/ exists: $(test -d node_modules/.bin && echo 'YES' || echo 'NO')"
-  fi
-  if [ ! -d node_modules/.bin ]; then
-    echo "ERROR: .bin directory was not created - npm installation failed"
+    
+    # Print the npm debug log if it exists
+    echo "=== NPM DEBUG LOG ==="
+    NPM_LOG=$(find ~/.npm/_logs -name "*debug*.log" -type f 2>/dev/null | head -1)
+    if [ -n "$NPM_LOG" ] && [ -f "$NPM_LOG" ]; then
+      echo "Found npm debug log: $NPM_LOG"
+      echo "--- LOG CONTENTS ---"
+      cat "$NPM_LOG"
+      echo "--- END LOG ---"
+    else
+      echo "No npm debug log found in ~/.npm/_logs/"
+      ls -la ~/.npm/_logs/ 2>/dev/null || echo "~/.npm/_logs/ directory does not exist"
+    fi
+    echo "=================="
   fi
   say "::endgroup::"
 
