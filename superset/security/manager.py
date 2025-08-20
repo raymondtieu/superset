@@ -555,28 +555,40 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         self,
         dashboard: "Dashboard",  # pylint: disable=unused-argument
         missing_dashboard_roles: Optional[list] = None,
+        required_external_groups: Optional[list] = None,
     ) -> SupersetError:
         """
         Return the error object for the denied Superset dashboard.
 
         :param dashboard: The denied Superset dashboard
         :param missing_dashboard_roles: The roles that the user is missing
+        :param required_external_groups: The external groups that the user is missing
         :returns: The error object
         """
 
-        message = "You don't have access to this dashboard."
+        message = "You don't have access to this dashboard. "
 
         if self.is_guest_user() and not self.has_guest_access(dashboard):
             message = (
                 "You don't have access to this dashboard because you are not "
                 "a guest user."
             )
-        elif missing_dashboard_roles:
-            roles_str = ', '.join(str(r) for r in missing_dashboard_roles)
-            message = (
-                f"You don't have access to this dashboard because you are "
-                f"missing the following roles: {roles_str}."
+            return SupersetError(
+                error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
+                message=message,
+                level=ErrorLevel.WARNING,
             )
+
+        if missing_dashboard_roles:
+            roles_str = ", ".join(str(r) for r in missing_dashboard_roles)
+            message = (
+                "You don't have access to this dashboard because you are "
+                f"missing the following roles: {roles_str}. "
+            )
+
+        if required_external_groups:
+            external_groups_str = ", ".join(str(g) for g in required_external_groups)
+            message += f"Join the following external groups: {external_groups_str}."
 
         return SupersetError(
             error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
@@ -2402,12 +2414,17 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
             ):
                 return
 
+            missing_dashboard_roles = [
+                role for role in dashboard.roles if role not in self.get_user_roles()
+            ]
+            required_external_groups = self.get_external_groups_for_superset_roles(
+                [role.name for role in missing_dashboard_roles]
+            )
             raise SupersetSecurityException(
                 self.get_dashboard_access_error_object(
                     dashboard,
-                    missing_dashboard_roles=[
-                        role for role in dashboard.roles if role not in self.get_user_roles()
-                    ],
+                    missing_dashboard_roles=missing_dashboard_roles,
+                    required_external_groups=required_external_groups
                 )
             )
 
