@@ -48,8 +48,8 @@ npm-install() {
 
   # Configure npm for better network reliability
   echo "Configuring npm for network timeouts and retries..."
-  npm config set fetch-timeout 300000    # 5 minutes fetch timeout
-  npm config set fetch-retries 5         # Retry failed downloads 5 times
+  npm config set fetch-timeout 180000    # 3 minutes fetch timeout
+  npm config set fetch-retries 3         # Retry failed downloads 3 times
   npm config set fetch-retry-factor 2    # Exponential backoff
   
   echo "Current npm config:"
@@ -82,8 +82,8 @@ npm-install() {
       NPM_LOG=$(find ~/.npm/_logs -name "*debug*.log" -type f 2>/dev/null | tail -1)
       if [ -n "$NPM_LOG" ] && [ -f "$NPM_LOG" ]; then
         echo "Latest npm debug log: $NPM_LOG"
-        echo "--- LAST 50 LINES ---"
-        tail -50 "$NPM_LOG"
+        echo "--- LAST 300 LINES ---"
+        tail -300 "$NPM_LOG"
         echo "--- END LOG ---"
       fi
       echo "=================================="
