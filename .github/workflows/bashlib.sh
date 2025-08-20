@@ -76,17 +76,48 @@ npm-install() {
     echo "Retrying npm ci with public registry..."
     npm ci --legacy-peer-deps --no-audit --no-fund
     
-    # If still failing, print debug info
+    # If npm ci still fails, try npm install as final fallback
     if [ ! -d node_modules/.bin ]; then
-      echo "=== FALLBACK ALSO FAILED - DEBUG INFO ==="
-      NPM_LOG=$(find ~/.npm/_logs -name "*debug*.log" -type f 2>/dev/null | tail -1)
-      if [ -n "$NPM_LOG" ] && [ -f "$NPM_LOG" ]; then
-        echo "Latest npm debug log: $NPM_LOG"
-        echo "--- LAST 300 LINES ---"
-        tail -300 "$NPM_LOG"
-        echo "--- END LOG ---"
+      echo "=== NPM CI STILL FAILED - TRYING NPM INSTALL ==="
+      echo "npm ci failed even with public registry. Trying npm install..."
+      
+      # Remove everything and try npm install (more permissive)
+      rm -rf node_modules 2>/dev/null || true
+      rm -f package-lock.json 2>/dev/null || true
+      
+      echo "Attempting fresh npm install..."
+      npm install --legacy-peer-deps --no-audit --no-fund
+      
+      # Check final result
+      if [ ! -d node_modules/.bin ]; then
+        echo "=== ALL METHODS FAILED - FULL DEBUG ==="
+        echo "System info:"
+        echo "Node: $(node --version)"
+        echo "NPM: $(npm --version)"
+        echo "Available disk space:"
+        df -h . 2>/dev/null || echo "Cannot check disk space"
+        echo "Available memory:"
+        free -h 2>/dev/null || echo "Cannot check memory"
+        
+        echo "npm configuration:"
+        npm config list
+        
+        echo "Latest npm debug log:"
+        NPM_LOG=$(find ~/.npm/_logs -name "*debug*.log" -type f 2>/dev/null | tail -1)
+        if [ -n "$NPM_LOG" ] && [ -f "$NPM_LOG" ]; then
+          echo "Log file: $NPM_LOG"
+          echo "--- LAST 300 LINES ---"
+          tail -300 "$NPM_LOG"
+          echo "--- END LOG ---"
+        else
+          echo "No npm debug log found"
+        fi
+        echo "=================================="
+      else
+        echo "SUCCESS: npm install worked! Created new package-lock.json"
       fi
-      echo "=================================="
+    else
+      echo "SUCCESS: npm ci worked with public registry"
     fi
   fi
   say "::endgroup::"
