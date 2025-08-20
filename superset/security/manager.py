@@ -21,7 +21,7 @@ import logging
 import re
 import time
 from collections import defaultdict
-from typing import Any, Callable, cast, NamedTuple, Optional, TYPE_CHECKING
+from typing import Any, Callable, cast, Dict, List, NamedTuple, Optional, TYPE_CHECKING
 
 from flask import current_app, Flask, g, Request
 from flask_appbuilder import Model
@@ -2442,6 +2442,59 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
             public_role = current_app.config.get("AUTH_ROLE_PUBLIC")
             return [self.get_public_role()] if public_role else []
         return user.roles
+
+    # ==================== Role Mapping Interface Methods ====================
+    # These methods provide abstracted access to AUTH_ROLES_MAPPING without
+    # exposing the raw configuration. They can be overridden in custom security managers.
+
+    def get_mapped_roles_for_external_group(self, external_group: str) -> List[str]:
+        """
+        Get Superset roles mapped to an external group.
+
+        :param external_group: The external group name (e.g., from OAuth/LDAP)
+        :return: List of Superset role names mapped to this group
+        """
+        auth_roles_mapping = current_app.config.get("AUTH_ROLES_MAPPING", {})
+        return auth_roles_mapping.get(external_group, [])
+
+    def is_external_group_mapped(self, external_group: str) -> bool:
+        """
+        Check if an external group has any role mappings.
+
+        :param external_group: The external group name
+        :return: True if the group has role mappings, False otherwise
+        """
+        auth_roles_mapping = current_app.config.get("AUTH_ROLES_MAPPING", {})
+        return external_group in auth_roles_mapping
+
+    def get_external_group_for_superset_role(self, superset_role: str) -> str:
+        """
+        Get the external group name for an internal group.
+
+        :param superset_role: The Superset role name
+        :return: The external group name
+        """
+        auth_roles_mapping = current_app.config.get("AUTH_ROLES_MAPPING", {})
+        for external_group, internal_groups in auth_roles_mapping.items():
+            if superset_role in internal_groups:
+                return external_group
+        return None
+
+    def get_external_groups_for_superset_roles(self, superset_roles: List[str]) -> List[str]:
+        """
+        Get the external group names for a list of Superset roles.
+
+        :param superset_roles: The Superset role names
+        :return: The external group names
+        """
+        auth_roles_mapping = current_app.config.get("AUTH_ROLES_MAPPING", {})
+        external_groups = set()
+        for external_group, internal_groups in auth_roles_mapping.items():
+            if set(internal_groups) & set(superset_roles):
+                external_groups.add(external_group)
+        return list(external_groups)
+
+    # ==================== End Role Mapping Interface Methods ====================
 
     def get_guest_rls_filters(
         self, dataset: "BaseDatasource"
