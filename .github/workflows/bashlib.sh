@@ -46,6 +46,19 @@ npm-install() {
   echo "npm: $(npm --version)"
   echo "node: $(node --version)"
 
+  # Configure npm for better network reliability
+  echo "Configuring npm for network timeouts and retries..."
+  npm config set timeout 300000          # 5 minutes timeout
+  npm config set fetch-timeout 300000    # 5 minutes fetch timeout
+  npm config set fetch-retries 5         # Retry failed downloads 5 times
+  npm config set fetch-retry-factor 2    # Exponential backoff
+  npm config set fetch-retry-mintimeout 10000   # Min 10s between retries
+  npm config set fetch-retry-maxtimeout 60000   # Max 60s between retries
+  
+  echo "Current npm config:"
+  npm config get timeout
+  npm config get fetch-retries
+  
   npm ci --legacy-peer-deps --no-audit --no-fund
   
   echo "Final state check:"
@@ -56,19 +69,18 @@ npm-install() {
   if [ ! -d node_modules/.bin ]; then
     echo "npm ci failed to create .bin directory - package-lock.json may be corrupted"
     
-    # Print the npm debug log if it exists
-    echo "=== NPM DEBUG LOG ==="
-    NPM_LOG=$(find ~/.npm/_logs -name "*debug*.log" -type f 2>/dev/null | head -1)
-    if [ -n "$NPM_LOG" ] && [ -f "$NPM_LOG" ]; then
-      echo "Found npm debug log: $NPM_LOG"
-      echo "--- LOG CONTENTS ---"
-      cat "$NPM_LOG"
-      echo "--- END LOG ---"
-    else
-      echo "No npm debug log found in ~/.npm/_logs/"
-      ls -la ~/.npm/_logs/ 2>/dev/null || echo "~/.npm/_logs/ directory does not exist"
+    # If still failing, print debug info
+    if [ ! -d node_modules/.bin ]; then
+      echo "=== FALLBACK ALSO FAILED - DEBUG INFO ==="
+      NPM_LOG=$(find ~/.npm/_logs -name "*debug*.log" -type f 2>/dev/null | tail -1)
+      if [ -n "$NPM_LOG" ] && [ -f "$NPM_LOG" ]; then
+        echo "Latest npm debug log: $NPM_LOG"
+        echo "--- LAST 50 LINES ---"
+        tail -50 "$NPM_LOG"
+        echo "--- END LOG ---"
+      fi
+      echo "=================================="
     fi
-    echo "=================="
   fi
   say "::endgroup::"
 
