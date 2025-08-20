@@ -64,7 +64,17 @@ npm-install() {
   
   # Check if npm ci actually succeeded by verifying .bin directory exists
   if [ ! -d node_modules/.bin ]; then
-    echo "npm ci failed to create .bin directory - package-lock.json may be corrupted"
+    echo "=== NPM CI FAILED - TRYING FALLBACK ==="
+    echo "npm ci failed, likely due to network timeouts. Trying fallback approach..."
+    
+    # Clean up and try with public npm registry as fallback
+    rm -rf node_modules 2>/dev/null || true
+    
+    echo "Switching to public npm registry for fallback..."
+    npm config set registry https://registry.npmjs.org/
+    
+    echo "Retrying npm ci with public registry..."
+    npm ci --legacy-peer-deps --no-audit --no-fund
     
     # If still failing, print debug info
     if [ ! -d node_modules/.bin ]; then
