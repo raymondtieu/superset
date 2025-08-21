@@ -83,7 +83,7 @@ npm-install() {
       
       # Remove everything and try npm install (more permissive)
       rm -rf node_modules 2>/dev/null || true
-      rm -f package-lock.json 2>/dev/null || true
+      # rm -f package-lock.json 2>/dev/null || true
       
       echo "Attempting fresh npm install..."
       npm install --legacy-peer-deps --no-audit --no-fund
