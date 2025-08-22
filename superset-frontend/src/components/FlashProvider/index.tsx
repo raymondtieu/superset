@@ -43,7 +43,10 @@ export default function FlashProvider({ children, messages }: Props) {
       const flash = flashObj[type];
       const toast = toasts[flash];
       if (toast) {
-        toast(text);
+        toast(text, {
+          allowHtml: true,
+          duration: 10000,
+        });
       }
     });
   });
