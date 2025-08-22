@@ -592,7 +592,7 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
 
             wiki_url = current_app.config.get("AUTH_ROLES_WIKI_URL", None)
             if wiki_url:
-                message += f"Learn more about roles <a href='{wiki_url}'>here</a>."
+                message += f"Learn more about roles <a target='_blank' href='{wiki_url}'>here</a>."
 
         return SupersetError(
             error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
