@@ -588,7 +588,7 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
 
         if required_external_groups:
             external_groups_str = ", ".join(str(g) for g in required_external_groups)
-            message += f"Join the following external groups: {external_groups_str}."
+            message += f"Join the following external groups: {external_groups_str}. "
 
             wiki_url = current_app.config.get("AUTH_ROLES_WIKI_URL", None)
             if wiki_url:
@@ -596,7 +596,7 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
 
         return SupersetError(
             error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
-            message=message,
+            message=message.strip(),
             level=ErrorLevel.WARNING,
         )
 
