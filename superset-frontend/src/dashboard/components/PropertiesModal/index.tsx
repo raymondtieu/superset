@@ -493,6 +493,7 @@ const PropertiesModal = ({
               'Owners is a list of users who can alter the dashboard. Searchable by name or username.',
             )}
           </p>
+          {getAutoSyncChartsControl()}
         </Col>
         <Col xs={24} md={12}>
           <h3 style={{ marginTop: '1em' }}>{t('Colors')}</h3>
@@ -540,6 +541,7 @@ const PropertiesModal = ({
                 'Owners is a list of users who can alter the dashboard. Searchable by name or username.',
               )}
             </p>
+            {getAutoSyncChartsControl()}
           </Col>
           <Col xs={24} md={12}>
             <StyledFormItem label={t('Roles')}>
@@ -737,7 +739,6 @@ const PropertiesModal = ({
           {isFeatureEnabled(FeatureFlag.DashboardRbac) && canAccessRoles
             ? getRowsWithRoles()
             : getRowsWithoutRoles()}
-          {getAutoSyncChartsControl()}
         </>
         <Row>
           <Col xs={24} md={24}>
