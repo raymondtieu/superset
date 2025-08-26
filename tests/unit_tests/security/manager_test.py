@@ -1001,31 +1001,7 @@ def test_get_dashboard_access_error_object_guest_user_no_access(
     assert isinstance(error, SupersetError)
     assert error.error_type == SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR
     assert error.level == ErrorLevel.WARNING
-    assert "You don't have access to this dashboard because you are not a guest user." in error.message
-
-def test_get_dashboard_access_error_object_missing_roles(
-    mocker: MockerFixture,
-    app_context: None,
-) -> None:
-    """
-    Test error message for missing dashboard roles.
-    """
-    sm = SupersetSecurityManager(appbuilder)
-    mock_dashboard = mocker.MagicMock()
-
-    # Mock regular user (not guest)
-    mocker.patch.object(sm, "is_guest_user", return_value=False)
-
-    missing_roles = ["Admin", "Editor"]
-    error = sm.get_dashboard_access_error_object(
-        mock_dashboard,
-        missing_dashboard_roles=missing_roles
-    )
-
-    assert isinstance(error, SupersetError)
-    assert error.error_type == SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR
-    assert error.level == ErrorLevel.WARNING
-    assert "You don't have access to this dashboard because you are missing the following roles: Admin, Editor." in error.message
+    assert "You don't have access to this dashboard." in error.message
 
 def test_get_dashboard_access_error_object_external_groups_with_wiki(
     mocker: MockerFixture,
@@ -1045,18 +1021,16 @@ def test_get_dashboard_access_error_object_external_groups_with_wiki(
     current_app_mock = mocker.patch("superset.security.manager.current_app")
     current_app_mock.config = {"AUTH_ROLES_WIKI_URL": wiki_url}
 
-    missing_roles = ["Admin", "Editor"]
     external_groups = ["group1"]
     error = sm.get_dashboard_access_error_object(
         mock_dashboard,
-        missing_dashboard_roles=missing_roles,
         required_external_groups=external_groups
     )
 
     assert isinstance(error, SupersetError)
     assert error.error_type == SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR
     assert error.level == ErrorLevel.WARNING
-    expected_message = f"You don't have access to this dashboard because you are missing the following roles: Admin, Editor. Join the following external groups: group1. Learn more about roles <a target='_blank' href='{wiki_url}'>here</a>."
+    expected_message = f"You don't have access to this dashboard. Join one of the following external groups: group1. Learn more about roles <a target='_blank' href='{wiki_url}'>here</a>."
     assert error.message == expected_message
 
 def test_get_dashboard_access_error_object_external_groups_without_wiki(
@@ -1076,18 +1050,16 @@ def test_get_dashboard_access_error_object_external_groups_without_wiki(
     current_app_mock = mocker.patch("superset.security.manager.current_app")
     current_app_mock.config = {}  # No AUTH_ROLES_WIKI_URL key
 
-    missing_roles = ["Admin", "Editor"]
-    external_groups = ["group1"]
+    external_groups = ["group1", "group2"]
     error = sm.get_dashboard_access_error_object(
         mock_dashboard,
-        missing_dashboard_roles=missing_roles,
         required_external_groups=external_groups
     )
 
     assert isinstance(error, SupersetError)
     assert error.error_type == SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR
     assert error.level == ErrorLevel.WARNING
-    expected_message = f"You don't have access to this dashboard because you are missing the following roles: Admin, Editor. Join the following external groups: group1."
+    expected_message = f"You don't have access to this dashboard. Join one of the following external groups: group1, group2."
     assert error.message == expected_message
 
 def test_get_dashboard_access_error_object_default_message(

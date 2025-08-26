@@ -554,14 +554,12 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
     def get_dashboard_access_error_object(  # pylint: disable=invalid-name
         self,
         dashboard: "Dashboard",  # pylint: disable=unused-argument
-        missing_dashboard_roles: Optional[list] = None,
         required_external_groups: Optional[list] = None,
     ) -> SupersetError:
         """
         Return the error object for the denied Superset dashboard.
 
         :param dashboard: The denied Superset dashboard
-        :param missing_dashboard_roles: The roles that the user is missing
         :param required_external_groups: The external groups that the user is missing
         :returns: The error object
         """
@@ -569,26 +567,15 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         message = "You don't have access to this dashboard. "
 
         if self.is_guest_user() and not self.has_guest_access(dashboard):
-            message = (
-                "You don't have access to this dashboard because you are not "
-                "a guest user."
-            )
             return SupersetError(
                 error_type=SupersetErrorType.DASHBOARD_SECURITY_ACCESS_ERROR,
-                message=message,
+                message=message.strip(),
                 level=ErrorLevel.WARNING,
-            )
-
-        if missing_dashboard_roles:
-            roles_str = ", ".join(str(r) for r in missing_dashboard_roles)
-            message = (
-                "You don't have access to this dashboard because you are "
-                f"missing the following roles: {roles_str}. "
             )
 
         if required_external_groups:
             external_groups_str = ", ".join(str(g) for g in required_external_groups)
-            message += f"Join the following external groups: {external_groups_str}. "
+            message += f"Join one of the following external groups: {external_groups_str}. "
 
             wiki_url = current_app.config.get("AUTH_ROLES_WIKI_URL", None)
             if wiki_url:
@@ -2427,7 +2414,6 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
             raise SupersetSecurityException(
                 self.get_dashboard_access_error_object(
                     dashboard,
-                    missing_dashboard_roles=missing_dashboard_roles,
                     required_external_groups=required_external_groups
                 )
             )
