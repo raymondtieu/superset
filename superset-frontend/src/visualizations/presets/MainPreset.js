@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+// eslint-disable-next-line import/no-unresolved
+import { pinterestVizPlugins } from '@pinterest-plugins/src/visualizations';
 import {
   isFeatureEnabled,
   FeatureFlag,
@@ -185,6 +187,7 @@ export default class MainPreset extends Preset {
           ],
         }).configure({ key: VizType.Cartodiagram }),
         ...experimentalPlugins,
+        ...pinterestVizPlugins,
       ],
     });
   }
