@@ -20,7 +20,8 @@
 export const LOG_ACTIONS_LOAD_CHART = 'load_chart';
 export const LOG_ACTIONS_RENDER_CHART = 'render_chart';
 export const LOG_ACTIONS_HIDE_BROWSER_TAB = 'hide_browser_tab';
-export const LOG_ACTIONS_LOAD_DASHBOARD_WITH_CHARTS = 'load_dashboard_with_charts';
+export const LOG_ACTIONS_LOAD_DASHBOARD_WITH_CHARTS =
+  'load_dashboard_with_charts';
 
 export const LOG_ACTIONS_MOUNT_DASHBOARD = 'mount_dashboard';
 export const LOG_ACTIONS_MOUNT_EXPLORER = 'mount_explorer';
