@@ -17,7 +17,6 @@
 # pylint: disable=invalid-name
 from __future__ import annotations
 
-from collections import defaultdict
 import contextlib
 import json
 import logging
@@ -902,15 +901,8 @@ class Superset(BaseSupersetView):
     @expose("/log/", methods=("POST",))
     def log(self) -> FlaskResponse:
         events = extract_all_events_from_request()
-        events_with_context = [extract_event_context(event) for event in events]
-        buckets = defaultdict(list)
-
-        # Group events by action to avoid logging too many events at once
-        for event in events_with_context:
-            buckets[event['action']].append(event)
-
-        for action, group in buckets.items():
-            event_logger.log_with_context(action=action, payload={"explode": "events", "events": json.dumps(group)})
+        for event in events:
+            event_logger.log_with_context(**extract_event_context(event), payload=event)
 
         return Response(status=200)
 
