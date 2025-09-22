@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+// eslint-disable-next-line import/no-unresolved
+import { pinterestControlMap } from '@pinterest-plugins/src/chart-controls/controlMap';
 import { sharedControlComponents } from '@superset-ui/chart-controls';
 import AnnotationLayerControl from './AnnotationLayerControl';
 import BoundsControl from './BoundsControl';
@@ -91,5 +93,6 @@ const controlMap = {
   TimeOffsetControl,
   ZoomConfigControl,
   ...sharedControlComponents,
+  ...pinterestControlMap,
 };
 export default controlMap;
