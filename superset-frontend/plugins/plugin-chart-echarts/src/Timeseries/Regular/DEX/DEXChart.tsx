@@ -112,21 +112,6 @@ export default function DEXChart(props: DEXChartTransformedProps) {
     return pivotRows.map(originalRow => {
       const formattedRow: Record<string, unknown> = { ...originalRow };
 
-      // Flatten date to a single YYYY-MM-DD string for WebDataRocks
-      const dtValue = (originalRow as Record<string, unknown>)['dt'] as
-        | Date
-        | number
-        | string
-        | undefined;
-      if (dtValue instanceof Date) {
-        formattedRow['dt'] = dtValue.toISOString().slice(0, 10);
-      } else if (typeof dtValue === 'number') {
-        formattedRow['dt'] = new Date(dtValue).toISOString().slice(0, 10);
-      } else if (typeof dtValue === 'string') {
-        // If it's already a date-like string, trim to YYYY-MM-DD
-        formattedRow['dt'] = dtValue.length >= 10 ? dtValue.slice(0, 10) : dtValue;
-      }
-
       // Ensure metric fields are numbers
       metrics.forEach(metricName => {
         const value = (originalRow as Record<string, unknown>)[metricName];
@@ -164,10 +149,8 @@ export default function DEXChart(props: DEXChartTransformedProps) {
     const instance = pivotInstanceRef.current;
     if (!instance || !hasPivot) return;
 
-    const mapping: Record<string, any> = {
-      // Treat dt as a plain string so WDR doesn't split into Year/Month/Day
-      dt: { type: 'string', caption: xAxis.label },
-    };
+    const mapping: Record<string, any> = {};
+
     groupbyNames.forEach(g => {
       mapping[g] = { type: 'string' };
     });
@@ -177,8 +160,13 @@ export default function DEXChart(props: DEXChartTransformedProps) {
 
     const report = {
       dataSource: {
-        data: formattedPivotRows,
-        mapping,
+        data: [
+          {
+            dt: { type: 'date string' },
+            ...mapping,
+          },
+          ...formattedPivotRows,
+        ]
       },
       slice: {
         rows: groupbyNames.map(name => ({ uniqueName: name })),
@@ -192,6 +180,7 @@ export default function DEXChart(props: DEXChartTransformedProps) {
         grid: {
           type: 'classic',
         },
+        datePattern: 'YYYY-MM-DD',
       },
     } as any;
 
