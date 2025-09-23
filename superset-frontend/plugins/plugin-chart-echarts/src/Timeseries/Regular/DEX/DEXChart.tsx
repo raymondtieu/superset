@@ -1,8 +1,4 @@
 import { getTimeFormatterForGranularity } from '@superset-ui/core';
-import {
-  MetricsLayoutEnum,
-  PivotTableChart,
-} from '@superset-ui/plugin-chart-pivot-table';
 
 import { DEFAULT_NUMBER_FORMAT } from '@superset-ui/chart-controls';
 import { DEXChartTransformedProps } from './types';

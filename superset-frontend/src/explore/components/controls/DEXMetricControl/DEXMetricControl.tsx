@@ -24,11 +24,6 @@ export default function DEXMetricControl(props: ControlComponentProps) {
   );
 
   useEffect(() => {
-    setOptions([
-      {label:'NUM_PIN_DELETE', value:'NUM_PIN_DELETE'},
-    ])
-    return;
-
     setIsLoading(true);
     SupersetClient.get({
       endpoint: `/api/v1/datasource/table/${datasetId}/column/${metricNameColumn}/values/`,
