@@ -83,7 +83,7 @@ const config: ControlPanelConfig = {
               ...dndGroupByControl,
               ...xAxisMixin,
               default: 'dt', // TODO (kgopal): Change to date column from constant
-              visibility: () => false,
+              type: 'HiddenControl',
             },
           },
         ],
