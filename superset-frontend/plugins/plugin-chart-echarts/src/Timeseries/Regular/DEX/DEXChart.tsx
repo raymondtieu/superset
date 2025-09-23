@@ -15,8 +15,7 @@ import { useEffect, useMemo, useRef } from 'react';
 const MIN_LINE_CHART_HEIGHT = 300;
 
 const PIVOT_TABLE_HEIGHT = 400;
-const PIVOT_TABLE_AGGREGATE_FUNCTION = 'Sum';
-const PIVOT_TABLE_ROW_COLUMN_ORDER = 'key_a_to_z';
+const PIVOT_TABLE_AGGREGATE_FUNCTION = 'sum';
 
 export default function DEXChart(props: DEXChartTransformedProps) {
   const {
@@ -32,79 +31,21 @@ export default function DEXChart(props: DEXChartTransformedProps) {
     pivotData,
   } = props;
 
-  // Safely derive pivot table data and metrics
   const pivotRows = Array.isArray(pivotData?.data) ? pivotData.data : [];
   const hasPivot = pivotRows.length > 0;
 
-  const pivotTableProps = {
-    width,
-    height,
-    data: pivotRows,
-    groupbyRows: groupby,
-    groupbyColumns: ['dt'], // TODO (kgopal): Change to use constant
-    metrics: hasPivot
-      ? Object.keys(pivotRows[0])
-          .map(key => key)
-          .filter(key => key !== 'dt' && !groupby.includes(key))
-      : [], // TODO (kgopal): Change to use constant for dt
-    tableRenderer: '',
-    colOrder: PIVOT_TABLE_ROW_COLUMN_ORDER,
-    rowOrder: PIVOT_TABLE_ROW_COLUMN_ORDER,
-    aggregateFunction: PIVOT_TABLE_AGGREGATE_FUNCTION,
-    transposePivot: false,
-    combineMetric: false,
-    rowSubtotalPosition: false,
-    colSubtotalPosition: false,
-    colTotals: true, // TODO (kgopal): Change to false when time comparison percent change applied
-    colSubTotals: false,
-    rowTotals: false,
-    rowSubTotals: false,
-    valueFormat: DEFAULT_NUMBER_FORMAT,
-    currencyFormat: {
-      symbol: '',
-      symbolPosition: '',
-    },
-    emitCrossFilters,
-    setDataMask,
-    verboseMap: datasource?.verboseMap || {},
-    columnFormats: datasource?.columnFormats || {},
-    currencyFormats: {},
-    metricsLayout: MetricsLayoutEnum.COLUMNS,
-    metricColorFormatters: [],
-    dateFormatters: {
-      [xAxis.label]: getTimeFormatterForGranularity(formData.timeGrainSqla),
-    },
-    onContextMenu,
-    timeGrainSqla: formData.timeGrainSqla,
-    margin: 100,
-    legacy_order_by: null,
-    order_desc: false,
-  };
-
-  const pivotContainerRef = useRef<HTMLDivElement | null>(null);
-  const pivotInstanceRef = useRef<any>(null);
-
-  // Normalize groupby to plain field names (strings)
-  const groupbyNames = useMemo(
-    () =>
-      (groupby || []).map((g: any) => {
-        if (typeof g === 'string') return g;
-        // Try common shapes used in Superset
-        return g?.label || g?.column || g?.sqlExpression || String(g);
-      }),
-    [groupby],
-  );
-
-  // Ensure WebDataRocks-friendly data formats
   const metrics = useMemo(
     () =>
       (hasPivot
         ? Object.keys(pivotRows[0])
             .map(key => key)
-            .filter(key => key !== 'dt' && !groupbyNames.includes(key))
+            .filter(key => key !== 'dt' && !groupby.includes(key)) // TODO (kgopal): Change to use constant for dt
         : []),
-    [hasPivot, pivotRows, groupbyNames],
+    [hasPivot, pivotRows, groupby],
   );
+
+  const pivotContainerRef = useRef<HTMLDivElement | null>(null);
+  const pivotInstanceRef = useRef<any>(null);
 
   const formattedPivotRows = useMemo(() => {
     if (!hasPivot) return [] as Record<string, unknown>[];
@@ -130,6 +71,9 @@ export default function DEXChart(props: DEXChartTransformedProps) {
 
     pivotInstanceRef.current = new WebDataRocks({
       container: pivotContainerRef.current,
+      customizeCell: (cellStyle: any, cellData: any) => {
+        // TODO (rtieu): Format numbers in pivot table using DEFAULT_NUMBER_FORMAT
+      },
       toolbar: true,
     });
 
@@ -151,9 +95,10 @@ export default function DEXChart(props: DEXChartTransformedProps) {
 
     const mapping: Record<string, any> = {};
 
-    groupbyNames.forEach(g => {
-      mapping[g] = { type: 'string' };
+    groupby.forEach(g => {
+      mapping[g as string] = { type: 'string' };
     });
+
     metrics.forEach(m => {
       mapping[m] = { type: 'number' };
     });
@@ -169,12 +114,15 @@ export default function DEXChart(props: DEXChartTransformedProps) {
         ]
       },
       slice: {
-        rows: groupbyNames.map(name => ({ uniqueName: name })),
+        rows: groupby.map(name => ({ uniqueName: name })),
         columns: [
           { uniqueName: 'Measures' },
           { uniqueName: 'dt' },
         ],
-        measures: metrics.map(name => ({ uniqueName: name, aggregation: 'sum' })),
+        measures: metrics.map(name => ({
+          uniqueName: name,
+          aggregation: PIVOT_TABLE_AGGREGATE_FUNCTION,
+        })),
       },
       options: {
         grid: {
@@ -198,10 +146,8 @@ export default function DEXChart(props: DEXChartTransformedProps) {
         }
       />
       {hasPivot ? (
-        <PivotTableChart {...pivotTableProps} height={PIVOT_TABLE_HEIGHT} />
+        <div id="pivotContainer" ref={pivotContainerRef} style={{ height: PIVOT_TABLE_HEIGHT }} />
       ) : null}
-
-      <div id="pivotContainer" ref={pivotContainerRef} style={{ height: PIVOT_TABLE_HEIGHT }} />
     </div>
   );
 }
