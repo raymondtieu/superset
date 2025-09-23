@@ -1872,7 +1872,7 @@ PINTEREST_WELCOME_TOP_SECTIONS: list[PinterestWelcomeTopSections] | None = []
 PINTEREST_TOP_TAG_ID = 1
 
 # TODO (kgopal): Remove all when dex dataset info is in db
-PINTEREST_DEX_DATASET_ID = 26
+PINTEREST_DEX_DATASET_ID = 20
 PINTEREST_DEX_METRIC_NAME_COLUMN = 'metric_name'
 PINTEREST_DEX_METRIC_VALUE_COLUMN = 'metric_value'
 PINTEREST_DEX_TIME_COLUMN = 'dt'

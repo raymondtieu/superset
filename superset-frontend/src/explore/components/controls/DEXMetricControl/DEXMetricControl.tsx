@@ -24,6 +24,12 @@ export default function DEXMetricControl(props: ControlComponentProps) {
   );
 
   useEffect(() => {
+    setOptions([
+      {label:'COL_A', value:'COL_A'},
+      {label:'COL_B', value:'COL_B'},
+    ])
+    return;
+
     setIsLoading(true);
     SupersetClient.get({
       endpoint: `/api/v1/datasource/table/${datasetId}/column/${metricNameColumn}/values/`,
