@@ -248,7 +248,7 @@ export async function getChartDataRequest({
       };
 
       const mockRows = [];
-      for (let d = 7; d >= 0; d -= 1) {
+      for (let d = 10; d >= 0; d -= 1) {
         const date = ts(d);
         platforms.forEach((p, idx) => {
           const base = baseByPlatform[p] || 1_000_000;
