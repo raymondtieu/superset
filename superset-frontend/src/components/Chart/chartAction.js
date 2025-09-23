@@ -226,11 +226,7 @@ export async function getChartDataRequest({
       const ts = (offsetDays = 0) =>
         new Date(now.getTime() - offsetDays * dayMs).toISOString();
 
-      // Build weekly long-form rows that match Pivot needs: { dt, platform, NUM_PIN_DELETE }
-      const weekMs = 7 * dayMs;
-      const tsWeek = (offsetWeeks = 0) =>
-        new Date(now.getTime() - offsetWeeks * weekMs).toISOString();
-
+      // Build daily long-form rows that match Pivot needs: { dt, platform, NUM_PIN_DELETE }
       const platforms = [
         '<NULL>',
         'ANDROID_MOBILE',
@@ -252,12 +248,12 @@ export async function getChartDataRequest({
       };
 
       const mockRows = [];
-      for (let w = 7; w >= 0; w -= 1) {
-        const date = tsWeek(w);
+      for (let d = 7; d >= 0; d -= 1) {
+        const date = ts(d);
         platforms.forEach((p, idx) => {
           const base = baseByPlatform[p] || 1_000_000;
-          // Small deterministic variation by week and platform index
-          const value = Math.round(base * (0.9 + 0.03 * (7 - w)) * (1 + idx * 0.01));
+          // Small deterministic variation by day and platform index
+          const value = Math.round(base * (0.9 + 0.03 * (7 - d)) * (1 + idx * 0.01));
           mockRows.push({ dt: date, platform: p, NUM_PIN_DELETE: value });
         });
       }

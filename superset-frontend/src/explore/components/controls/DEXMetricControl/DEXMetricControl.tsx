@@ -25,8 +25,7 @@ export default function DEXMetricControl(props: ControlComponentProps) {
 
   useEffect(() => {
     setOptions([
-      {label:'COL_A', value:'COL_A'},
-      {label:'COL_B', value:'COL_B'},
+      {label:'NUM_PIN_DELETE', value:'NUM_PIN_DELETE'},
     ])
     return;
 
