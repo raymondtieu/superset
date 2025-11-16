@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 import logging
+import time
 from typing import Optional
 
 from flask import current_app
@@ -28,8 +28,12 @@ from superset.exceptions import SupersetException
 from superset.reports.schemas import SlackChannelSchema
 from superset.utils.backports import StrEnum
 from superset.utils.core import recipients_string_to_list
+from superset.utils import cache as cache_util
+from superset.extensions import cache_manager
 
 logger = logging.getLogger(__name__)
+
+SLACK_CHANNELS_CACHE_TIMEOUT = 60 * 60 * 24 * 2  # 2 days
 
 
 class SlackChannelTypes(StrEnum):
@@ -48,6 +52,37 @@ def get_slack_client() -> WebClient:
     return WebClient(token=token, proxy=current_app.config["SLACK_PROXY"])
 
 
+@cache_util.memoized_func(
+    key="slack_conversations_list",
+    cache=cache_manager.cache,
+)
+def get_channels(types: Optional[list[SlackChannelTypes]] = None, limit: int = 999):
+    client = get_slack_client()
+    channels = []
+    cursor = None
+    extra_params = {}
+    extra_params["types"] = ",".join(types) if types else None
+    while True:
+        try:
+            response = client.conversations_list(
+                limit=limit, cursor=cursor, exclude_archived=True, **extra_params
+            )
+        except SlackApiError as ex:
+            if ex.response.status_code == 429:
+                logger.warning(
+                    "Slack API rate limited. Retrying after %d seconds",
+                    ex.response.headers["retry-after"],
+                )
+                wait_time = int(ex.response.headers["retry-after"]) + 1
+                time.sleep(wait_time)
+                continue
+        channels.extend(response.data["channels"])
+        cursor = response.data.get("response_metadata", {}).get("next_cursor")
+        if not cursor:
+            break
+    return channels
+
+
 def get_channels_with_search(
     search_string: str = "",
     limit: int = 999,
@@ -61,29 +96,18 @@ def get_channels_with_search(
     """
 
     try:
-        client = get_slack_client()
-        channel_schema = SlackChannelSchema()
-        channels: list[SlackChannelSchema] = []
-        cursor = None
-        extra_params = {}
-        extra_params["types"] = ",".join(types) if types else None
-
-        while True:
-            response = client.conversations_list(
-                limit=limit, cursor=cursor, exclude_archived=True, **extra_params
-            )
-            channels.extend(
-                channel_schema.load(channel) for channel in response.data["channels"]
-            )
-            cursor = response.data.get("response_metadata", {}).get("next_cursor")
-            if not cursor:
-                break
-
+        channels = get_channels(
+            types=types, limit=limit, cache_timeout=SLACK_CHANNELS_CACHE_TIMEOUT
+        )
         # The search string can be multiple channels separated by commas
         if search_string:
-            search_array = recipients_string_to_list(search_string)
+            search_array = [
+                search.lower().strip("#")
+                for search in (search_string.split(",") if search_string else [])
+            ]
+
             channels = [
-                channel
+                channel["id"]
                 for channel in channels
                 if any(
                     (
