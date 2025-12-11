@@ -18,9 +18,31 @@
  */
 import { supersetTheme } from '@superset-ui/core';
 import { Tooltip as AntdTooltip } from 'antd-v5';
-import { TooltipProps, TooltipPlacement } from 'antd-v5/lib/tooltip';
+import type React from 'react';
 
-export { TooltipProps, TooltipPlacement };
+// Extract TooltipProps from the actual AntdTooltip component
+export type TooltipProps = React.ComponentProps<typeof AntdTooltip>;
+
+// Export as both type and value for webpack compatibility
+// This allows JSX files to import it (even though using a type in PropTypes.oneOf is incorrect)
+// The value is undefined but webpack needs to see the export name
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const TooltipProps: any = undefined;
+
+// Extract TooltipPlacement type
+export type TooltipPlacement =
+  | 'top'
+  | 'left'
+  | 'right'
+  | 'bottom'
+  | 'topLeft'
+  | 'topRight'
+  | 'bottomLeft'
+  | 'bottomRight'
+  | 'leftTop'
+  | 'leftBottom'
+  | 'rightTop'
+  | 'rightBottom';
 
 export const Tooltip = ({ overlayStyle, ...props }: TooltipProps) => (
   <>
