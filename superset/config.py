@@ -567,6 +567,8 @@ DEFAULT_FEATURE_FLAGS: dict[str, bool] = {
     # Allow users to optionally specify date formats in email subjects, which will be parsed if enabled. # noqa: E501
     "DATE_FORMAT_IN_EMAIL_SUBJECT": False,
     "ENABLE_COLUMN_VALUES_CACHE": True,
+    # Enable dashboard automatic refresh
+    "ENABLE_DASHBOARD_AUTO_REFRESH": True,
 }
 
 # ------------------------------

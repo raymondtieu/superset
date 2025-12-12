@@ -19,7 +19,7 @@
 import { PureComponent } from 'react';
 import { isEmpty } from 'lodash';
 import { connect } from 'react-redux';
-import { t } from '@superset-ui/core';
+import { t, isFeatureEnabled, FeatureFlag } from '@superset-ui/core';
 import { Menu } from 'src/components/Menu';
 import { URL_PARAMS } from 'src/constants';
 import ShareMenuItems from 'src/dashboard/components/menu/ShareMenuItems';
@@ -305,6 +305,7 @@ export class HeaderActionsDropdown extends PureComponent<
           </Menu.Item>
         )}
 
+      {!isFeatureEnabled(FeatureFlag.EnableDashboardAutoRefresh) && (
         <Menu.Item key={MenuKeys.AutorefreshModal}>
           <RefreshIntervalModal
             addSuccessToast={addSuccessToast}
@@ -317,6 +318,7 @@ export class HeaderActionsDropdown extends PureComponent<
             triggerNode={<div>{t('Set auto-refresh interval')}</div>}
           />
         </Menu.Item>
+      )}
       </Menu>
     );
   }
