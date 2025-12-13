@@ -523,7 +523,7 @@ test('should show active owners without dashboard rbac', async () => {
 });
 
 test('should not show roles without dashboard rbac editor permissions', async () => {
-  spyIsFeatureEnabled.mockReturnValue(true);
+  mockedIsFeatureEnabled.mockReturnValue(true);
 
   const props = createProps();
   const propsWithDashboardInfo = { ...props, user: {}, dashboardInfo };
@@ -545,7 +545,7 @@ describe('sync chart owners', () => {
   });
 
   it('should be checked if enabled in metadata', async () => {
-    spyIsFeatureEnabled.mockReturnValue(true);
+    mockedIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
     const propsWithDashboardInfo = {
@@ -582,7 +582,7 @@ describe('sync chart owners', () => {
   });
 
   it('should not be checked if disabled in metadata', async () => {
-    spyIsFeatureEnabled.mockReturnValue(true);
+    mockedIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
     const propsWithDashboardInfo = {
@@ -620,7 +620,7 @@ describe('sync chart owners', () => {
   });
 
   it('should not be checked if metadata does not have param', async () => {
-    spyIsFeatureEnabled.mockReturnValue(true);
+    mockedIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
     render(<PropertiesModal {...props} />, {
@@ -641,7 +641,7 @@ describe('sync chart owners', () => {
   });
 
   it('should not be checked if value is not a boolean in metadata', async () => {
-    spyIsFeatureEnabled.mockReturnValue(true);
+    mockedIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
     const propsWithDashboardInfo = {
@@ -670,7 +670,7 @@ describe('sync chart owners', () => {
   });
 
   it('should defer charts API call until checkbox is clicked', async () => {
-    spyIsFeatureEnabled.mockReturnValue(true);
+    mockedIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
     render(<PropertiesModal {...props} />, {
@@ -740,7 +740,7 @@ describe('sync chart owners', () => {
   });
 
   test('should update when metadata changes', async () => {
-    spyIsFeatureEnabled.mockReturnValue(true);
+    mockedIsFeatureEnabled.mockReturnValue(true);
 
     const props = createProps();
     const propsWithDashboardInfo = {
