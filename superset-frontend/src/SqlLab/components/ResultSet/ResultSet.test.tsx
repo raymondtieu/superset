@@ -21,7 +21,6 @@ import {
   screen,
   waitFor,
   fireEvent,
-  within,
 } from 'spec/helpers/testing-library';
 import configureStore from 'redux-mock-store';
 import { Store } from 'redux';
@@ -510,10 +509,10 @@ describe('ResultSet', () => {
     );
     const downloadButton = getByTestId('export-csv-button');
     fireEvent.click(downloadButton);
-    const warningModal = await findByRole('dialog');
-    expect(
-      within(warningModal).getByText(`Download is on the way`),
-    ).toBeInTheDocument();
+    const warningModal = await findByRole('dialog', {
+      name: 'Download is on the way',
+    });
+    expect(warningModal).toBeInTheDocument();
   });
 
   test('should not allow download as CSV when user does not have permission to export data', async () => {
