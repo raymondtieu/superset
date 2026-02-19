@@ -56,6 +56,8 @@ export interface HeaderDropdownProps {
   userCanSave: boolean;
   userCanShare: boolean;
   userCanCurate: boolean;
+  userCanEditTieringInfo?: boolean;
+  userCanPromoteTier1?: boolean;
   manageEmbedded: () => void;
   dataMask: any;
   lastModifiedTime: number;
@@ -65,6 +67,10 @@ export interface HeaderDropdownProps {
   refreshLimit: number;
   refreshWarning: string;
   directPathToChild: string[];
+  showPinterestTieringInfoModal: () => void;
+  hidePinterestTieringInfoModal: () => void;
+  showPinterestPromoteTier1Modal: () => void;
+  hidePinterestPromoteTier1Modal: () => void;
 }
 
 export interface HeaderProps {
