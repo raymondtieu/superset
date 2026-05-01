@@ -40,7 +40,10 @@ import withToasts from 'src/components/MessageToasts/withToasts';
 import Loading from 'src/components/Loading';
 import DeleteModal from 'src/components/DeleteModal';
 import PropertiesModal from 'src/dashboard/components/PropertiesModal';
-import DashboardCard from 'src/features/dashboards/DashboardCard';
+// import DashboardCard from 'src/features/dashboards/DashboardCard';
+// @ts-ignore
+// eslint-disable-next-line import/no-unresolved
+import DashboardCard from '@pinterest-plugins/src/features/dashboards/pinterestDashboardCard';
 import EmptyState from './EmptyState';
 import SubMenu from './SubMenu';
 import { WelcomeTable } from './types';
@@ -279,7 +282,9 @@ function DashboardTable({
               saveFavoriteStatus={saveFavoriteStatus}
               favoriteStatus={favoriteStatus[e.id]}
               handleBulkDashboardExport={handleBulkDashboardExport}
-              onDelete={dashboard => setDashboardToDelete(dashboard)}
+              onDelete={(dashboard: Dashboard) =>
+                setDashboardToDelete(dashboard)
+              }
             />
           ))}
         </CardContainer>
