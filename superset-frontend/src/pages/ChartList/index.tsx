@@ -79,6 +79,12 @@ import { QueryObjectColumns } from 'src/views/CRUD/types';
 // @ts-ignore
 // eslint-disable-next-line import/no-unresolved
 import PinterestSoftDeletedCell from '@pinterest-plugins/src/governance/softDeletion/pinterestSoftDeletedCell';
+import {
+  getChartListExtraListColumns,
+  getChartListTitleIndicators,
+  // @ts-ignore
+  // eslint-disable-next-line import/no-unresolved
+} from '@pinterest-plugins/src/features/charts/chartListExtensions';
 // @ts-ignore
 // eslint-disable-next-line import/no-unresolved
 import { getPinterestChartListExtras } from '@pinterest-plugins/src/features/listView/pinterestListViewExtras';
@@ -174,6 +180,9 @@ function ChartList(props: ChartListProps) {
   } = props;
 
   const history = useHistory();
+  const showGovernanceExtras = isFeatureEnabled(
+    FeatureFlag.PinterestChartGovernanceUi,
+  );
 
   const {
     state: {
@@ -351,6 +360,7 @@ function ChartList(props: ChartListProps) {
           } = original;
           const link = (
             <Link to={url} data-test={`${sliceName}-list-chart-title`}>
+              {showGovernanceExtras && getChartListTitleIndicators(original)}
               {certifiedBy && (
                 <>
                   <CertifiedBadge
@@ -417,6 +427,7 @@ function ChartList(props: ChartListProps) {
         disableSortBy: true,
         size: 'xxl',
       },
+      ...(showGovernanceExtras ? getChartListExtraListColumns() : []),
       {
         Cell: ({
           row: {
@@ -574,6 +585,7 @@ function ChartList(props: ChartListProps) {
       refreshData,
       addSuccessToast,
       addDangerToast,
+      showGovernanceExtras,
     ],
   );
 
